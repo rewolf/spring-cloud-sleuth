@@ -25,22 +25,25 @@ import org.springframework.messaging.rsocket.RSocketConnectorConfigurer;
 
 public class TracingRSocketConnectorConfigurer implements RSocketConnectorConfigurer {
 
-	final Propagator propagator;
+	private final Propagator propagator;
 
-	final Tracer tracer;
+	private final Tracer tracer;
 
-	public TracingRSocketConnectorConfigurer(Propagator propagator, Tracer tracer) {
+	private final boolean isZipkinPropagationEnabled;
+
+	public TracingRSocketConnectorConfigurer(Propagator propagator, Tracer tracer, boolean isZipkinPropagationEnabled) {
 		this.propagator = propagator;
 		this.tracer = tracer;
+		this.isZipkinPropagationEnabled = isZipkinPropagationEnabled;
 	}
 
 	@Override
 	public void configure(RSocketConnector rSocketConnector) {
 		rSocketConnector.interceptors(ir -> ir
-				.forResponder((RSocketInterceptor) rSocket -> new TracingResponderRSocketProxy(rSocket, propagator,
-						new ByteBufGetter(), tracer))
-				.forRequester((RSocketInterceptor) rSocket -> new TracingRequesterRSocketProxy(rSocket, propagator,
-						new ByteBufSetter(), tracer)));
+				.forResponder((RSocketInterceptor) rSocket -> new TracingResponderRSocketProxy(rSocket, this.propagator,
+						new ByteBufGetter(), this.tracer, this.isZipkinPropagationEnabled))
+				.forRequester((RSocketInterceptor) rSocket -> new TracingRequesterRSocketProxy(rSocket, this.propagator,
+						new ByteBufSetter(), this.tracer, this.isZipkinPropagationEnabled)));
 	}
 
 }

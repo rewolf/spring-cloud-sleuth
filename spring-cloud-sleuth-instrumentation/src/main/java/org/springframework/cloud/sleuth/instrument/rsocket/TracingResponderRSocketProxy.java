@@ -24,6 +24,8 @@ import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.frame.FrameType;
 import io.rsocket.metadata.RoutingMetadata;
+import io.rsocket.metadata.TracingMetadata;
+import io.rsocket.metadata.TracingMetadataCodec;
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.RSocketProxy;
 import org.apache.commons.logging.Log;
@@ -37,6 +39,7 @@ import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.WithThreadLocalSpan;
+import org.springframework.cloud.sleuth.internal.EncodingUtils;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 /**
@@ -58,59 +61,72 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 
 	private final ThreadLocalSpan threadLocalSpan;
 
+	private final boolean isZipkinPropagationEnabled;
+
 	public TracingResponderRSocketProxy(RSocket source, Propagator propagator, Propagator.Getter<ByteBuf> getter,
-			Tracer tracer) {
+			Tracer tracer, boolean isZipkinPropagationEnabled) {
 		super(source);
 		this.propagator = propagator;
 		this.getter = getter;
-		// this.messageSpanCustomizer = messageSpanCustomizer;
 		this.tracer = tracer;
 		this.threadLocalSpan = new ThreadLocalSpan(tracer);
+		this.isZipkinPropagationEnabled = isZipkinPropagationEnabled;
 	}
 
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
 		// called on Netty EventLoop
 		// there can't be trace context in thread local here
-		Span consumerSpan = consumerSpan(payload, payload.sliceMetadata(), FrameType.REQUEST_FNF);
-		// create and scope a span for the message processor
-		Span handle = this.tracer.nextSpan(consumerSpan).start();
+		Span handle = consumerSpanBuilder(payload.sliceMetadata(), FrameType.REQUEST_FNF);
 		if (log.isDebugEnabled()) {
 			log.debug("Created consumer span " + handle);
 		}
-		setSpanInScope(handle);
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
-		return super.fireAndForget(newPayload)
-				.contextWrite(context -> context.put(Span.class, handle).put(TraceContext.class, handle.context()))
-				.doOnError(this::finishSpan).doOnSuccess(__ -> finishSpan(null)).doOnCancel(() -> finishSpan(null));
+		// @formatter:off
+		return Mono.fromRunnable(() -> setSpanInScope(handle))
+				.contextWrite(context -> context.put(Span.class, handle)
+						.put(TraceContext.class, handle.context()))
+				.flatMap(o -> super.fireAndForget(newPayload))
+					.doOnError(this::finishSpan)
+					.doOnSuccess(__ -> finishSpan(null))
+					.doOnCancel(() -> finishSpan(null));
+		// @formatter:on
 	}
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
-		Span consumerSpan = consumerSpan(payload, payload.sliceMetadata(), FrameType.REQUEST_RESPONSE);
-		Span handle = this.tracer.nextSpan(consumerSpan).start();
+		Span handle = consumerSpanBuilder(payload.sliceMetadata(), FrameType.REQUEST_CHANNEL);
 		if (log.isDebugEnabled()) {
 			log.debug("Created consumer span " + handle);
 		}
-		setSpanInScope(handle);
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
-		return super.requestResponse(newPayload)
-				.contextWrite(context -> context.put(Span.class, handle).put(TraceContext.class, handle.context()))
-				.doOnError(this::finishSpan).doOnSuccess(__ -> finishSpan(null)).doOnCancel(() -> finishSpan(null));
+		// @formatter:off
+		return Mono.fromRunnable(() -> setSpanInScope(handle))
+				.contextWrite(context -> context.put(Span.class, handle)
+						.put(TraceContext.class, handle.context()))
+				.flatMap(o -> super.requestResponse(newPayload))
+				.doOnError(this::finishSpan)
+				.doOnSuccess(__ -> finishSpan(null))
+				.doOnCancel(() -> finishSpan(null));
+		// @formatter:on
 	}
 
 	@Override
 	public Flux<Payload> requestStream(Payload payload) {
-		Span consumerSpan = consumerSpan(payload, payload.sliceMetadata(), FrameType.REQUEST_STREAM);
-		Span handle = this.tracer.nextSpan(consumerSpan).start();
+		Span handle = consumerSpanBuilder(payload.sliceMetadata(), FrameType.REQUEST_CHANNEL);
 		if (log.isDebugEnabled()) {
 			log.debug("Created consumer span " + handle);
 		}
-		setSpanInScope(handle);
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
-		return super.requestStream(newPayload)
-				.contextWrite(context -> context.put(Span.class, handle).put(TraceContext.class, handle.context()))
-				.doOnError(this::finishSpan).doOnComplete(() -> finishSpan(null)).doOnCancel(() -> finishSpan(null));
+		// @formatter:off
+		return Flux.defer(() -> Mono.fromRunnable(() -> setSpanInScope(handle)))
+				.contextWrite(context -> context.put(Span.class, handle)
+						.put(TraceContext.class, handle.context()))
+				.flatMap(o -> super.requestStream(newPayload))
+				.doOnError(this::finishSpan)
+				.doOnComplete(() -> finishSpan(null))
+				.doOnCancel(() -> finishSpan(null));
+		// @formatter:on
 	}
 
 	@Override
@@ -118,47 +134,65 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 		return Flux.from(payloads).switchOnFirst((firstSignal, flux) -> {
 			final Payload firstPayload = firstSignal.get();
 			if (firstPayload != null) {
-				Span consumerSpan = consumerSpan(firstPayload, firstPayload.sliceMetadata(), FrameType.REQUEST_CHANNEL);
-				Span handle = this.tracer.nextSpan(consumerSpan).start();
+				Span handle = consumerSpanBuilder(firstPayload.sliceMetadata(), FrameType.REQUEST_CHANNEL);
+				if (handle == null) {
+					return super.requestChannel(flux);
+				}
 				if (log.isDebugEnabled()) {
 					log.debug("Created consumer span " + handle);
 				}
-				setSpanInScope(handle);
 				final Payload newPayload = PayloadUtils.cleanTracingMetadata(firstPayload,
 						new HashSet<>(propagator.fields()));
-				return super.requestChannel(flux.skip(1).startWith(newPayload))
-						.contextWrite(
-								context -> context.put(Span.class, handle).put(TraceContext.class, handle.context()))
-						.doOnError(this::finishSpan).doOnComplete(() -> finishSpan(null))
+				// @formatter:off
+				return Flux.defer(() -> Mono.fromRunnable(() -> setSpanInScope(handle)))
+						.contextWrite(context -> context.put(Span.class, handle)
+								.put(TraceContext.class, handle.context()))
+						.flatMap(o -> super.requestChannel(flux.skip(1).startWith(newPayload)))
+						.doOnError(this::finishSpan)
+						.doOnComplete(() -> finishSpan(null))
 						.doOnCancel(() -> finishSpan(null));
+				// @formatter:on
 			}
-
 			return flux;
 		});
 	}
 
-	// TODO: Copy from SI
-	private Span consumerSpan(Payload payload, ByteBuf headers, FrameType requestType) {
-		Span.Builder consumerSpanBuilder = this.propagator.extract(headers, this.getter);
+	private Span consumerSpanBuilder(ByteBuf headers, FrameType requestType) {
+		Span.Builder consumerSpanBuilder = consumerSpanBuilder(headers);
 		if (log.isDebugEnabled()) {
-			log.debug("Extracted result from headers - will finish it immediately " + consumerSpanBuilder);
+			log.debug("Extracted result from headers " + consumerSpanBuilder);
 		}
-		final RoutingMetadata routingMetadata = new RoutingMetadata(
-				CompositeMetadataUtils.extract(headers, WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
+		final ByteBuf extract = CompositeMetadataUtils.extract(headers,
+				WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString());
+		if (extract == null) {
+			// TODO: figure it out
+			return null;
+		}
+		final RoutingMetadata routingMetadata = new RoutingMetadata(extract);
 		final Iterator<String> iterator = routingMetadata.iterator();
-
 		// Start and finish a consumer span as we will immediately process it.
 		consumerSpanBuilder.kind(Span.Kind.CONSUMER).name(requestType.name() + " " + iterator.next()).start();
+		return consumerSpanBuilder.start();
+	}
 
-		// TODO: What to do about it? In SI we know that this would be the broker
-		// TODO: if in the headers broker has added a header we will set this to broker
-		// consumerSpanBuilder.remoteServiceName(REMOTE_SERVICE_NAME);
-		// TODO: Convert payload to message?
-		// consumerSpanBuilder =
-		// this.messageSpanCustomizer.customizeHandle(consumerSpanBuilder, payload, null);
-		Span consumerSpan = consumerSpanBuilder.start();
-		consumerSpan.end();
-		return consumerSpan;
+	private Span.Builder consumerSpanBuilder(ByteBuf headers) {
+		if (this.isZipkinPropagationEnabled) {
+			ByteBuf extract = CompositeMetadataUtils.extract(headers,
+					WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN.getString());
+			if (extract != null) {
+				TracingMetadata tracingMetadata = TracingMetadataCodec.decode(extract);
+				Span.Builder builder = this.tracer.spanBuilder();
+				// TODO: take it from Tracer?, Long to String
+				TraceContext.Builder parentBuilder = this.tracer.traceContextBuilder()
+						.sampled(tracingMetadata.isSampled()).traceId(EncodingUtils.fromLong(tracingMetadata.traceId()))
+						.parentId(EncodingUtils.fromLong(tracingMetadata.parentId()));
+				return builder.setParent(parentBuilder.build());
+			}
+			else {
+				return this.propagator.extract(headers, this.getter);
+			}
+		}
+		return this.propagator.extract(headers, this.getter);
 	}
 
 	@Override

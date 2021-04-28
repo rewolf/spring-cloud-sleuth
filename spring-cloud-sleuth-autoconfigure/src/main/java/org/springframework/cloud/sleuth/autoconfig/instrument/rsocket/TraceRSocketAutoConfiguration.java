@@ -16,9 +16,12 @@
 
 package org.springframework.cloud.sleuth.autoconfig.instrument.rsocket;
 
+import java.util.List;
+
 import io.rsocket.RSocket;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -31,6 +34,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.rsocket.server.RSocketServerCustomizer;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
+import org.springframework.cloud.sleuth.brave.propagation.PropagationType;
 import org.springframework.cloud.sleuth.instrument.rsocket.TracingRSocketConnectorConfigurer;
 import org.springframework.cloud.sleuth.instrument.rsocket.TracingRSocketServerCustomizer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
@@ -51,6 +55,8 @@ import org.springframework.messaging.rsocket.RSocketStrategies;
 @EnableConfigurationProperties(SleuthRSocketProperties.class)
 public class TraceRSocketAutoConfiguration {
 
+	// We're using text instead of objects cause we can have same properties from Brave /
+	// OTel
 	@Bean
 	@Scope("prototype")
 	@ConditionalOnMissingBean
@@ -62,14 +68,23 @@ public class TraceRSocketAutoConfiguration {
 		return builder;
 	}
 
-	@Bean
-	RSocketConnectorConfigurer tracingRSocketConnectorConfigurer(Propagator propagator, Tracer tracer) {
-		return new TracingRSocketConnectorConfigurer(propagator, tracer);
+	private boolean containsZipkinPropagationType(List<PropagationType> types) {
+		return types.contains(PropagationType.B3);
 	}
 
 	@Bean
-	RSocketServerCustomizer tracingRSocketServerCustomizer(Propagator propagator, Tracer tracer) {
-		return new TracingRSocketServerCustomizer(propagator, tracer);
+	RSocketConnectorConfigurer tracingRSocketConnectorConfigurer(Propagator propagator, Tracer tracer,
+			@Value("${spring.sleuth.propagation.type:B3}") List<PropagationType> types) {
+		return new TracingRSocketConnectorConfigurer(propagator, tracer, containsZipkinPropagationType(types));
+	}
+
+	// We're using text instead of objects cause we can have same properties from Brave /
+	// OTel
+	@Bean
+	RSocketServerCustomizer tracingRSocketServerCustomizer(Propagator propagator, Tracer tracer,
+			@Value("${spring.sleuth.propagation.type:B3}") List<PropagationType> types) {
+		return new TracingRSocketServerCustomizer(propagator, tracer, containsZipkinPropagationType(types));
 	}
 
 }
+

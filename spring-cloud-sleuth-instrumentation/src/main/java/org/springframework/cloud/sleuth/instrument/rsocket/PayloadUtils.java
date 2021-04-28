@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.rsocket;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import io.netty.buffer.ByteBufAllocator;
@@ -24,6 +25,7 @@ import io.rsocket.Payload;
 import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadata.Entry;
 import io.rsocket.metadata.CompositeMetadataCodec;
+import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.ByteBufPayload;
 import io.rsocket.util.DefaultPayload;
 
@@ -34,10 +36,12 @@ final class PayloadUtils {
 	}
 
 	static Payload cleanTracingMetadata(Payload payload, Set<String> fields) {
+		Set<String> fieldsWithDefaultZipkin = new HashSet<>(fields);
+		fieldsWithDefaultZipkin.add(WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN.getString());
 		final CompositeMetadata entries = new CompositeMetadata(payload.metadata(), true);
 		final CompositeByteBuf metadata = ByteBufAllocator.DEFAULT.compositeBuffer();
 		for (Entry entry : entries) {
-			if (!fields.contains(entry.getMimeType())) {
+			if (!fieldsWithDefaultZipkin.contains(entry.getMimeType())) {
 				CompositeMetadataCodec.encodeAndAddMetadataWithCompression(metadata, ByteBufAllocator.DEFAULT,
 						entry.getMimeType(), entry.getContent());
 			}
@@ -47,13 +51,17 @@ final class PayloadUtils {
 
 	private static Payload payload(Payload payload, CompositeByteBuf metadata) {
 		final Payload newPayload;
-		if (payload instanceof ByteBufPayload) {
-			newPayload = ByteBufPayload.create(payload.data().retain(), metadata.retain());
+		try {
+			if (payload instanceof ByteBufPayload) {
+				newPayload = ByteBufPayload.create(payload.data().retain(), metadata.retain());
+			}
+			else {
+				newPayload = DefaultPayload.create(payload.data().retain(), metadata.retain());
+			}
 		}
-		else {
-			newPayload = DefaultPayload.create(payload.data().retain(), metadata.retain());
+		finally {
+			payload.release();
 		}
-		payload.release();
 		return newPayload;
 	}
 

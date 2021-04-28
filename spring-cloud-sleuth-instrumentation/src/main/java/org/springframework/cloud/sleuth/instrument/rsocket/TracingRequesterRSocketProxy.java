@@ -20,10 +20,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.function.Function;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
+import io.rsocket.frame.FrameType;
 import io.rsocket.metadata.RoutingMetadata;
+import io.rsocket.metadata.TracingMetadataCodec;
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.RSocketProxy;
 import org.apache.commons.logging.Log;
@@ -36,6 +39,7 @@ import reactor.util.context.ContextView;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.internal.EncodingUtils;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 /**
@@ -55,38 +59,68 @@ public class TracingRequesterRSocketProxy extends RSocketProxy {
 
 	private final Tracer tracer;
 
+	private final boolean isZipkinPropagationEnabled;
+
 	public TracingRequesterRSocketProxy(RSocket source, Propagator propagator,
-			Propagator.Setter<CompositeByteBuf> setter, Tracer tracer) {
+			Propagator.Setter<CompositeByteBuf> setter, Tracer tracer, boolean isZipkinPropagationEnabled) {
 		super(source);
 		this.propagator = propagator;
 		this.setter = setter;
 		this.tracer = tracer;
+		this.isZipkinPropagationEnabled = isZipkinPropagationEnabled;
 	}
 
 	@Override
 	public Mono<Void> fireAndForget(Payload payload) {
-		return setSpan(super::fireAndForget, payload);
+		return setSpan(super::fireAndForget, payload, FrameType.REQUEST_FNF);
 	}
 
 	@Override
 	public Mono<Payload> requestResponse(Payload payload) {
-		return setSpan(super::requestResponse, payload);
+		return setSpan(super::requestResponse, payload, FrameType.REQUEST_RESPONSE);
 	}
 
-	<T> Mono<T> setSpan(Function<Payload, Mono<T>> input, Payload payload) {
+	<T> Mono<T> setSpan(Function<Payload, Mono<T>> input, Payload payload, FrameType frameType) {
 		return Mono.deferContextual(contextView -> {
 			Span.Builder spanBuilder = spanBuilder(contextView);
-			final RoutingMetadata routingMetadata = new RoutingMetadata(CompositeMetadataUtils
-					.extract(payload.sliceMetadata(), WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString()));
+			ByteBuf extracted = CompositeMetadataUtils.extract(payload.sliceMetadata(),
+					WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString());
+			// TODO: do sth about extracted == null, log that tracing can't be used or sth
+			final RoutingMetadata routingMetadata = new RoutingMetadata(extracted);
 			final Iterator<String> iterator = routingMetadata.iterator();
-			Span span = spanBuilder.kind(Span.Kind.PRODUCER).name(iterator.next()).start();
+			String route = iterator.next();
+			Span span = spanBuilder.kind(Span.Kind.PRODUCER).name(frameType.name() + " " + route).start();
+			span.tag("rsocket.route", route);
+			span.tag("rsocket.request-type", frameType.name());
 			if (log.isDebugEnabled()) {
 				log.debug("Extracted result from context or thread local " + span);
 			}
 			final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
-			this.propagator.inject(span.context(), (CompositeByteBuf) newPayload.metadata(), this.setter);
+			TraceContext traceContext = span.context();
+			if (this.isZipkinPropagationEnabled) {
+				injectDefaultZipkinRSocketHeaders(newPayload, traceContext);
+			}
+			this.propagator.inject(traceContext, (CompositeByteBuf) newPayload.metadata(), this.setter);
 			return input.apply(newPayload).doOnError(span::error).doFinally(signalType -> span.end());
 		});
+	}
+
+	private void injectDefaultZipkinRSocketHeaders(Payload newPayload, TraceContext traceContext) {
+		TracingMetadataCodec.Flags flags = traceContext.sampled() == null ? TracingMetadataCodec.Flags.UNDECIDED
+				: traceContext.sampled() ? TracingMetadataCodec.Flags.SAMPLE : TracingMetadataCodec.Flags.NOT_SAMPLE;
+		String traceId = traceContext.traceId();
+		long[] traceIds = EncodingUtils.fromString(traceId);
+		long[] spanId = EncodingUtils.fromString(traceContext.spanId());
+		long[] parentSpanId = EncodingUtils.fromString(traceContext.parentId());
+		boolean isTraceId128Bit = traceIds.length == 2;
+		if (isTraceId128Bit) {
+			TracingMetadataCodec.encode128(newPayload.metadata().alloc(), traceIds[0], traceIds[1], spanId[0],
+					EncodingUtils.fromString(traceContext.parentId())[0], flags);
+		}
+		else {
+			TracingMetadataCodec.encode64(newPayload.metadata().alloc(), traceIds[0], spanId[0], parentSpanId[0],
+					flags);
+		}
 	}
 
 	private Span.Builder spanBuilder(ContextView contextView) {

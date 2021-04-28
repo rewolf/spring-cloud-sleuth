@@ -29,18 +29,21 @@ public class TracingRSocketServerCustomizer implements RSocketServerCustomizer {
 
 	final Tracer tracer;
 
-	public TracingRSocketServerCustomizer(Propagator propagator, Tracer tracer) {
+	private final boolean isZipkinPropagationEnabled;
+
+	public TracingRSocketServerCustomizer(Propagator propagator, Tracer tracer, boolean isZipkinPropagationEnabled) {
 		this.propagator = propagator;
 		this.tracer = tracer;
+		this.isZipkinPropagationEnabled = isZipkinPropagationEnabled;
 	}
 
 	@Override
 	public void customize(RSocketServer rSocketServer) {
 		rSocketServer.interceptors(ir -> ir
 				.forResponder((RSocketInterceptor) rSocket -> new TracingResponderRSocketProxy(rSocket, propagator,
-						new ByteBufGetter(), tracer))
+						new ByteBufGetter(), tracer, isZipkinPropagationEnabled))
 				.forRequester((RSocketInterceptor) rSocket -> new TracingRequesterRSocketProxy(rSocket, propagator,
-						new ByteBufSetter(), tracer)));
+						new ByteBufSetter(), tracer, isZipkinPropagationEnabled)));
 	}
 
 }
