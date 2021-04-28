@@ -42,6 +42,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.messaging.rsocket.RSocketRequester.Builder;
+import org.springframework.messaging.rsocket.RSocketStrategies;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MimeType;
 
@@ -64,8 +65,11 @@ public abstract class TraceRSocketTests {
 		final TestSpanHandler spans = context.getBean(TestSpanHandler.class);
 		final int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
 		final TestController controller2 = context.getBean(TestController.class);
-		final Builder builder = context.getBean(Builder.class);
-		final RSocketRequester rSocketRequester = builder
+		final RSocketStrategies strategies = context.getBean(RSocketStrategies.class);
+
+		final Builder rsocketRequesterBuilder = RSocketRequester.builder().rsocketStrategies(strategies);
+
+		final RSocketRequester rSocketRequester = rsocketRequesterBuilder
 				.websocket(URI.create("ws://localhost:" + port + "/rsocket"));
 
 		// REQUEST FNF

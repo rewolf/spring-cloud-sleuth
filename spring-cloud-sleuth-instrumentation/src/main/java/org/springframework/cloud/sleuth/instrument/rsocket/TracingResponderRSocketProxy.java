@@ -83,10 +83,10 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 		}
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
 		// @formatter:off
-		return Mono.fromRunnable(() -> setSpanInScope(handle))
-				.contextWrite(context -> context.put(Span.class, handle)
+		return super.fireAndForget(newPayload)
+					.doFirst(() ->  setSpanInScope(handle))
+					.contextWrite(context -> context.put(Span.class, handle)
 						.put(TraceContext.class, handle.context()))
-				.flatMap(o -> super.fireAndForget(newPayload))
 					.doOnError(this::finishSpan)
 					.doOnSuccess(__ -> finishSpan(null))
 					.doOnCancel(() -> finishSpan(null));
@@ -101,10 +101,10 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 		}
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
 		// @formatter:off
-		return Mono.fromRunnable(() -> setSpanInScope(handle))
+		return super.requestResponse(newPayload)
+				.doFirst(() ->  setSpanInScope(handle))
 				.contextWrite(context -> context.put(Span.class, handle)
 						.put(TraceContext.class, handle.context()))
-				.flatMap(o -> super.requestResponse(newPayload))
 				.doOnError(this::finishSpan)
 				.doOnSuccess(__ -> finishSpan(null))
 				.doOnCancel(() -> finishSpan(null));
@@ -119,10 +119,10 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 		}
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
 		// @formatter:off
-		return Flux.defer(() -> Mono.fromRunnable(() -> setSpanInScope(handle)))
+		return super.requestStream(newPayload)
+				.doFirst(() ->  setSpanInScope(handle))
 				.contextWrite(context -> context.put(Span.class, handle)
 						.put(TraceContext.class, handle.context()))
-				.flatMap(o -> super.requestStream(newPayload))
 				.doOnError(this::finishSpan)
 				.doOnComplete(() -> finishSpan(null))
 				.doOnCancel(() -> finishSpan(null));
@@ -144,10 +144,10 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 				final Payload newPayload = PayloadUtils.cleanTracingMetadata(firstPayload,
 						new HashSet<>(propagator.fields()));
 				// @formatter:off
-				return Flux.defer(() -> Mono.fromRunnable(() -> setSpanInScope(handle)))
+				return super.requestChannel(flux.skip(1).startWith(newPayload))
+						.doFirst(() ->  setSpanInScope(handle))
 						.contextWrite(context -> context.put(Span.class, handle)
 								.put(TraceContext.class, handle.context()))
-						.flatMap(o -> super.requestChannel(flux.skip(1).startWith(newPayload)))
 						.doOnError(this::finishSpan)
 						.doOnComplete(() -> finishSpan(null))
 						.doOnCancel(() -> finishSpan(null));
