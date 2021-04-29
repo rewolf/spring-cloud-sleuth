@@ -19,7 +19,6 @@ package org.springframework.cloud.sleuth.instrument.rsocket;
 import java.net.URI;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 
 import brave.Span;
 import brave.Tracer;
@@ -60,7 +59,7 @@ public abstract class TraceRSocketTests {
 				.properties("server.port=0", "spring.rsocket.server.transport=websocket",
 						"spring.rsocket.server.mapping-path=/rsocket", "spring.jmx.enabled=false",
 						"spring.application.name=TraceRSocketTests", "security.basic.enabled=false",
-						"management.security.enabled=false", "spring.sleuth.reactor.instrumentation-type=DECORATE_QUEUES")
+						"management.security.enabled=false")
 				.run();
 		final TestSpanHandler spans = context.getBean(TestSpanHandler.class);
 		final int port = context.getBean(Environment.class).getProperty("local.server.port", Integer.class);
@@ -75,8 +74,7 @@ public abstract class TraceRSocketTests {
 		// REQUEST FNF
 		whenRequestFnFIsSent(rSocketRequester, "api.c2.fnf").block();
 
-		FrameType receivedFrame = controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS);
-		then(receivedFrame).isNotNull();
+		FrameType receivedFrame = controller2.getReceivedFrames().take();
 		thenSpanWasReportedWithTags(spans, "api.c2.fnf", receivedFrame);
 		spans.clear();
 		controller2.span = null;
@@ -84,8 +82,7 @@ public abstract class TraceRSocketTests {
 		// REQUEST RESPONSE
 		whenRequestResponseIsSent(rSocketRequester, "api.c2.rr").block();
 
-		receivedFrame = controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS);
-		then(receivedFrame).isNotNull();
+		receivedFrame = controller2.getReceivedFrames().take();
 		thenSpanWasReportedWithTags(spans, "api.c2.rr", receivedFrame);
 		spans.clear();
 		controller2.span = null;
@@ -93,8 +90,7 @@ public abstract class TraceRSocketTests {
 		// REQUEST STREAM
 		whenRequestStreamIsSent(rSocketRequester, "api.c2.rs").blockLast();
 
-		receivedFrame = controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS);
-		then(receivedFrame).isNotNull();
+		receivedFrame = controller2.getReceivedFrames().take();
 		thenSpanWasReportedWithTags(spans, "api.c2.rs", receivedFrame);
 		spans.clear();
 		controller2.span = null;
@@ -102,15 +98,14 @@ public abstract class TraceRSocketTests {
 		// REQUEST CHANNEL
 		whenRequestChannelIsSent(rSocketRequester, "api.c2.rc").blockLast();
 
-		receivedFrame = controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS);
-		then(receivedFrame).isNotNull();
+		receivedFrame = controller2.getReceivedFrames().take();
 		thenSpanWasReportedWithTags(spans, "api.c2.rc", receivedFrame);
 		spans.clear();
 		controller2.span = null;
 
 		// REQUEST FNF
 		whenNonSampledRequestFnfIsSent(rSocketRequester);
-		controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS);
+		controller2.getReceivedFrames().take();
 		// then
 		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
 		spans.clear();
@@ -118,7 +113,7 @@ public abstract class TraceRSocketTests {
 
 		// REQUEST RESPONSE
 		whenNonSampledRequestResponseIsSent(rSocketRequester);
-		then(controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS)).isNotNull();
+		controller2.getReceivedFrames().take();
 		// then
 		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
 		spans.clear();
@@ -126,7 +121,7 @@ public abstract class TraceRSocketTests {
 
 		// REQUEST STREAM
 		whenNonSampledRequestStreamIsSent(rSocketRequester);
-		then(controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS)).isNotNull();
+		controller2.getReceivedFrames().take();
 		// then
 		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
 		spans.clear();
@@ -134,7 +129,7 @@ public abstract class TraceRSocketTests {
 
 		// REQUEST CHANNEL
 		whenNonSampledRequestChannelIsSent(rSocketRequester);
-		then(controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS)).isNotNull();
+		controller2.getReceivedFrames().take();
 		// then
 		thenNoSpanWasReported(spans, controller2, EXPECTED_TRACE_ID);
 		spans.clear();
@@ -152,7 +147,7 @@ public abstract class TraceRSocketTests {
 				.properties("server.port=0", "spring.rsocket.server.transport=websocket",
 						"spring.rsocket.server.mapping-path=/rsocket", "spring.jmx.enabled=false",
 						"spring.application.name=TraceRSocketTests", "security.basic.enabled=false",
-						"management.security.enabled=false", "spring.sleuth.reactor.instrumentation-type=DECORATE_QUEUES")
+						"management.security.enabled=false")
 				.run();
 
 		final org.springframework.cloud.sleuth.Tracer tracer = context
@@ -171,7 +166,7 @@ public abstract class TraceRSocketTests {
 		whenRequestFnFIsSent(rSocketRequester, "api.c2.fnf")
 				.contextWrite(ctx -> ctx.put(TraceContext.class, nextSpanFnf.context()))
 				.doFinally(signalType -> nextSpanFnf.end()).block();
-		then(controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS)).isNotNull();
+		controller2.getReceivedFrames().take();
 		thenNoSpanWasReported(spans, controller2, nextSpanFnf.context().traceId());
 		spans.clear();
 		controller2.span = null;
@@ -182,7 +177,7 @@ public abstract class TraceRSocketTests {
 				.contextWrite(ctx -> ctx.put(TraceContext.class, nextSpanRR.context()))
 				.doFinally(signalType -> nextSpanRR.end()).block();
 
-		then(controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS)).isNotNull();
+		controller2.getReceivedFrames().take();
 		thenNoSpanWasReported(spans, controller2, nextSpanRR.context().traceId());
 		spans.clear();
 		controller2.span = null;
@@ -193,7 +188,7 @@ public abstract class TraceRSocketTests {
 				.contextWrite(ctx -> ctx.put(TraceContext.class, nextSpanRS.context()))
 				.doFinally(signalType -> nextSpanRS.end()).blockLast();
 
-		then(controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS)).isNotNull();
+		controller2.getReceivedFrames().take();
 		thenNoSpanWasReported(spans, controller2, nextSpanRS.context().traceId());
 		spans.clear();
 		controller2.span = null;
@@ -204,7 +199,7 @@ public abstract class TraceRSocketTests {
 				.contextWrite(ctx -> ctx.put(TraceContext.class, nextSpanRC.context()))
 				.doFinally(signalType -> nextSpanRC.end()).blockLast();
 
-		then(controller2.getReceivedFrames().poll(5, TimeUnit.SECONDS)).isNotNull();
+		controller2.getReceivedFrames().take();
 		thenNoSpanWasReported(spans, controller2, nextSpanRC.context().traceId());
 		spans.clear();
 		controller2.span = null;

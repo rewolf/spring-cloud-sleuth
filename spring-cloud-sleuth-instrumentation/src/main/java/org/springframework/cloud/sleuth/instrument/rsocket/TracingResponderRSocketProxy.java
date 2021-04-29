@@ -34,11 +34,13 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.ThreadLocalSpan;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.WithThreadLocalSpan;
+import org.springframework.cloud.sleuth.instrument.reactor.ReactorSleuth;
 import org.springframework.cloud.sleuth.internal.EncodingUtils;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
@@ -59,17 +61,20 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 
 	private final Tracer tracer;
 
+	private final CurrentTraceContext currentTraceContext;
+
 	private final ThreadLocalSpan threadLocalSpan;
 
 	private final boolean isZipkinPropagationEnabled;
 
 	public TracingResponderRSocketProxy(RSocket source, Propagator propagator, Propagator.Getter<ByteBuf> getter,
-			Tracer tracer, boolean isZipkinPropagationEnabled) {
+			Tracer tracer, CurrentTraceContext currentTraceContext, boolean isZipkinPropagationEnabled) {
 		super(source);
 		this.propagator = propagator;
 		this.getter = getter;
 		this.tracer = tracer;
 		this.threadLocalSpan = new ThreadLocalSpan(tracer);
+		this.currentTraceContext = currentTraceContext;
 		this.isZipkinPropagationEnabled = isZipkinPropagationEnabled;
 	}
 
@@ -83,13 +88,15 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 		}
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
 		// @formatter:off
-		return super.fireAndForget(newPayload)
-					.doFirst(() ->  setSpanInScope(handle))
-					.contextWrite(context -> context.put(Span.class, handle)
-						.put(TraceContext.class, handle.context()))
-					.doOnError(this::finishSpan)
-					.doOnSuccess(__ -> finishSpan(null))
-					.doOnCancel(() -> finishSpan(null));
+		/*
+
+		return context.put(Span.class, handle).put(TraceContext.class, handle.context()).put(Tracer.SpanInScope.class,
+				tracer.withSpan(handle));
+
+		 */
+		try (Tracer.SpanInScope ws = tracer.withSpan(handle)) {
+			return ReactorSleuth.tracedMono(this.tracer, this.currentTraceContext, "", () -> super.fireAndForget(newPayload));
+		}
 		// @formatter:on
 	}
 
@@ -100,15 +107,9 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 			log.debug("Created consumer span " + handle);
 		}
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
-		// @formatter:off
-		return super.requestResponse(newPayload)
-				.doFirst(() ->  setSpanInScope(handle))
-				.contextWrite(context -> context.put(Span.class, handle)
-						.put(TraceContext.class, handle.context()))
-				.doOnError(this::finishSpan)
-				.doOnSuccess(__ -> finishSpan(null))
-				.doOnCancel(() -> finishSpan(null));
-		// @formatter:on
+		try (Tracer.SpanInScope ws = tracer.withSpan(handle)) {
+			return ReactorSleuth.tracedMono(this.tracer, this.currentTraceContext, "", () -> super.requestResponse(newPayload));
+		}
 	}
 
 	@Override
@@ -118,15 +119,9 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 			log.debug("Created consumer span " + handle);
 		}
 		final Payload newPayload = PayloadUtils.cleanTracingMetadata(payload, new HashSet<>(propagator.fields()));
-		// @formatter:off
-		return super.requestStream(newPayload)
-				.doFirst(() ->  setSpanInScope(handle))
-				.contextWrite(context -> context.put(Span.class, handle)
-						.put(TraceContext.class, handle.context()))
-				.doOnError(this::finishSpan)
-				.doOnComplete(() -> finishSpan(null))
-				.doOnCancel(() -> finishSpan(null));
-		// @formatter:on
+		try (Tracer.SpanInScope ws = tracer.withSpan(handle)) {
+			return ReactorSleuth.tracedFlux(this.tracer, this.currentTraceContext, "", () -> super.requestStream(newPayload));
+		}
 	}
 
 	@Override
@@ -143,15 +138,9 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 				}
 				final Payload newPayload = PayloadUtils.cleanTracingMetadata(firstPayload,
 						new HashSet<>(propagator.fields()));
-				// @formatter:off
-				return super.requestChannel(flux.skip(1).startWith(newPayload))
-						.doFirst(() ->  setSpanInScope(handle))
-						.contextWrite(context -> context.put(Span.class, handle)
-								.put(TraceContext.class, handle.context()))
-						.doOnError(this::finishSpan)
-						.doOnComplete(() -> finishSpan(null))
-						.doOnCancel(() -> finishSpan(null));
-				// @formatter:on
+				try (Tracer.SpanInScope ws = tracer.withSpan(handle)) {
+					return ReactorSleuth.tracedFlux(this.tracer, this.currentTraceContext, "", () -> super.requestChannel(flux.skip(1).startWith(newPayload)));
+				}
 			}
 			return flux;
 		});
@@ -170,7 +159,6 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 		}
 		final RoutingMetadata routingMetadata = new RoutingMetadata(extract);
 		final Iterator<String> iterator = routingMetadata.iterator();
-		// Start and finish a consumer span as we will immediately process it.
 		consumerSpanBuilder.kind(Span.Kind.CONSUMER).name(requestType.name() + " " + iterator.next()).start();
 		return consumerSpanBuilder.start();
 	}
@@ -182,7 +170,6 @@ public class TracingResponderRSocketProxy extends RSocketProxy implements WithTh
 			if (extract != null) {
 				TracingMetadata tracingMetadata = TracingMetadataCodec.decode(extract);
 				Span.Builder builder = this.tracer.spanBuilder();
-				// TODO: take it from Tracer?, Long to String
 				TraceContext.Builder parentBuilder = this.tracer.traceContextBuilder()
 						.sampled(tracingMetadata.isSampled()).traceId(EncodingUtils.fromLong(tracingMetadata.traceId()))
 						.parentId(EncodingUtils.fromLong(tracingMetadata.parentId()));

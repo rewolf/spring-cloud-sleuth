@@ -32,6 +32,7 @@ import org.springframework.boot.autoconfigure.rsocket.RSocketRequesterAutoConfig
 import org.springframework.boot.autoconfigure.rsocket.RSocketServerAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.rsocket.server.RSocketServerCustomizer;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.autoconfig.brave.BraveAutoConfiguration;
 import org.springframework.cloud.sleuth.brave.propagation.PropagationType;
@@ -73,17 +74,16 @@ public class TraceRSocketAutoConfiguration {
 	}
 
 	@Bean
-	RSocketConnectorConfigurer tracingRSocketConnectorConfigurer(Propagator propagator, Tracer tracer,
-			@Value("${spring.sleuth.propagation.type:B3}") List<PropagationType> types) {
-		return new TracingRSocketConnectorConfigurer(propagator, tracer, containsZipkinPropagationType(types));
+	RSocketConnectorConfigurer tracingRSocketConnectorConfigurer(Propagator propagator, Tracer tracer, CurrentTraceContext
+			currentTraceContext, @Value("${spring.sleuth.propagation.type:B3}") List<PropagationType> types) {
+		return new TracingRSocketConnectorConfigurer(propagator, tracer, currentTraceContext, containsZipkinPropagationType(types));
 	}
 
 	// We're using text instead of objects cause we can have same properties from Brave /
 	// OTel
 	@Bean
-	RSocketServerCustomizer tracingRSocketServerCustomizer(Propagator propagator, Tracer tracer,
-			@Value("${spring.sleuth.propagation.type:B3}") List<PropagationType> types) {
-		return new TracingRSocketServerCustomizer(propagator, tracer, containsZipkinPropagationType(types));
+	RSocketServerCustomizer tracingRSocketServerCustomizer(Propagator propagator, Tracer tracer, CurrentTraceContext currentTraceContext, @Value("${spring.sleuth.propagation.type:B3}") List<PropagationType> types) {
+		return new TracingRSocketServerCustomizer(propagator, tracer, currentTraceContext, containsZipkinPropagationType(types));
 	}
 
 }

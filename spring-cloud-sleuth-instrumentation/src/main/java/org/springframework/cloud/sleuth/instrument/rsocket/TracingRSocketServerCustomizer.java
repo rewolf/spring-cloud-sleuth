@@ -20,20 +20,24 @@ import io.rsocket.core.RSocketServer;
 import io.rsocket.plugins.RSocketInterceptor;
 
 import org.springframework.boot.rsocket.server.RSocketServerCustomizer;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 public class TracingRSocketServerCustomizer implements RSocketServerCustomizer {
 
-	final Propagator propagator;
+	private final Propagator propagator;
 
-	final Tracer tracer;
+	private final Tracer tracer;
+
+	private final CurrentTraceContext currentTraceContext;
 
 	private final boolean isZipkinPropagationEnabled;
 
-	public TracingRSocketServerCustomizer(Propagator propagator, Tracer tracer, boolean isZipkinPropagationEnabled) {
+	public TracingRSocketServerCustomizer(Propagator propagator, Tracer tracer, CurrentTraceContext currentTraceContext, boolean isZipkinPropagationEnabled) {
 		this.propagator = propagator;
 		this.tracer = tracer;
+		this.currentTraceContext = currentTraceContext;
 		this.isZipkinPropagationEnabled = isZipkinPropagationEnabled;
 	}
 
@@ -41,7 +45,7 @@ public class TracingRSocketServerCustomizer implements RSocketServerCustomizer {
 	public void customize(RSocketServer rSocketServer) {
 		rSocketServer.interceptors(ir -> ir
 				.forResponder((RSocketInterceptor) rSocket -> new TracingResponderRSocketProxy(rSocket, propagator,
-						new ByteBufGetter(), tracer, isZipkinPropagationEnabled))
+						new ByteBufGetter(), tracer, currentTraceContext, isZipkinPropagationEnabled))
 				.forRequester((RSocketInterceptor) rSocket -> new TracingRequesterRSocketProxy(rSocket, propagator,
 						new ByteBufSetter(), tracer, isZipkinPropagationEnabled)));
 	}
