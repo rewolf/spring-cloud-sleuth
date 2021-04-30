@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,43 +14,35 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.batch;
+package org.springframework.cloud.sleuth.autoconfig.instrument.batch;
 
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
-import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
-import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.cloud.sleuth.instrument.batch.TraceJobRepository;
 
 /**
- * StepBuilderFactory adding {@link TraceStepExecutionListener}.
+ * Bean post processor for {@link StepBuilderFactory}.
  *
  * @author Marcin Grzejszczak
  * @since 3.1.0
  */
-public class TraceStepBuilderFactory extends StepBuilderFactory {
+public class TraceJobRepositoryBeanPostProcessor implements BeanPostProcessor {
 
 	private final BeanFactory beanFactory;
 
-	private final StepBuilderFactory delegate;
-
-	private Tracer tracer;
-
-	public TraceStepBuilderFactory(BeanFactory beanFactory, StepBuilderFactory delegate) {
-		super(null, null);
+	public TraceJobRepositoryBeanPostProcessor(BeanFactory beanFactory) {
 		this.beanFactory = beanFactory;
-		this.delegate = delegate;
 	}
 
 	@Override
-	public StepBuilder get(String name) {
-		return this.delegate.get(name).listener(new TraceStepExecutionListener(tracer()));
-	}
-
-	private Tracer tracer() {
-		if (this.tracer == null) {
-			this.tracer = this.beanFactory.getBean(Tracer.class);
+	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		if (bean instanceof JobRepository && !(bean instanceof TraceJobRepository)) {
+			return new TraceJobRepository(this.beanFactory, (JobRepository) bean);
 		}
-		return this.tracer;
+		return bean;
 	}
 
 }

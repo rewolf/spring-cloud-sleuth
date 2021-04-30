@@ -52,9 +52,8 @@ class TraceStepExecutionListener implements StepExecutionListener {
 		List<Throwable> throwables = stepExecution.getFailureExceptions();
 		Span span = spanAndScope.getSpan();
 		span.tag("batch.step.name", stepExecution.getStepName());
-		span.tag("batch.step.jobExecutionId", String.valueOf(stepExecution.getJobExecutionId()));
+		span.tag("batch.job.executionId", String.valueOf(stepExecution.getJobExecutionId()));
 		span.tag("batch.step.executionId", String.valueOf(stepExecution.getId()));
-		span.tag("batch.step.status", stepExecution.getStatus().name());
 		span.tag("batch.step.type", stepExecution.getExecutionContext().getString(Step.STEP_TYPE_KEY));
 		Tracer.SpanInScope scope = spanAndScope.getScope();
 		if (!throwables.isEmpty()) {

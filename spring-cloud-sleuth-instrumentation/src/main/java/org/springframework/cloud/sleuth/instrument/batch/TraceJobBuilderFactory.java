@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.batch;
 
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.cloud.sleuth.Tracer;
 
@@ -37,7 +36,7 @@ public class TraceJobBuilderFactory extends JobBuilderFactory {
 	private Tracer tracer;
 
 	public TraceJobBuilderFactory(BeanFactory beanFactory, JobBuilderFactory delegate) {
-		super(beanFactory.getBean(JobRepository.class));
+		super(null);
 		this.beanFactory = beanFactory;
 		this.delegate = delegate;
 	}
