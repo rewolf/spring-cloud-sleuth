@@ -25,6 +25,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
+import org.springframework.cloud.sleuth.Tag;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.util.ReflectionUtils;
@@ -62,8 +63,8 @@ public class TraceAsyncAspect {
 		}
 		span = span.name(spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
-			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
-			span.tag(METHOD_KEY, pjp.getSignature().getName());
+			Tag.of(AsyncTags.ASYNC_CLASS, pjp.getTarget().getClass().getSimpleName()).tag(span);
+			Tag.of(AsyncTags.ASYNC_METHOD, pjp.getSignature().getName()).tag(span);
 			return pjp.proceed();
 		}
 		finally {
