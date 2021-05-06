@@ -41,10 +41,6 @@ import org.springframework.util.ReflectionUtils;
 @Aspect
 public class TraceAsyncAspect {
 
-	private static final String CLASS_KEY = "class";
-
-	private static final String METHOD_KEY = "method";
-
 	private final Tracer tracer;
 
 	private final SpanNamer spanNamer;

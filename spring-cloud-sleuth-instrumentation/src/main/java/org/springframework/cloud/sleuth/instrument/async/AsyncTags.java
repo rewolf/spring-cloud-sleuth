@@ -20,6 +20,7 @@ import org.springframework.cloud.sleuth.TagKey;
 
 /**
  * Tags related to async processing.
+ *
  * @author Marcin Grzejszczak
  * @since 3.0.3
  */
@@ -41,7 +42,7 @@ public enum AsyncTags implements TagKey {
 	ASYNC_METHOD {
 		@Override
 		public String getKey() {
-			return "async";
+			return "method";
 		}
 	}
 }
