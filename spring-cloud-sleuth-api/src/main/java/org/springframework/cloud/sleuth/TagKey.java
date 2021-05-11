@@ -17,13 +17,14 @@
 package org.springframework.cloud.sleuth;
 
 /**
- * Key pair representing a dimension of a span used to classify and drill into measurements.
- * Inspired by Micrometer.
+ * Key pair representing a dimension of a span used to classify and drill into
+ * measurements. Inspired by Micrometer.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3
  */
 public interface TagKey {
+
 	/**
 	 * @return tag key
 	 */

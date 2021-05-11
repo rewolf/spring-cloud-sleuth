@@ -25,6 +25,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tag;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.annotation.ContinueSpan;
 import org.springframework.cloud.sleuth.annotation.NewSpanParser;
@@ -38,10 +39,6 @@ import org.springframework.cloud.sleuth.annotation.SleuthMethodInvocationProcess
 abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodInvocationProcessor, BeanFactoryAware {
 
 	private static final Log logger = LogFactory.getLog(AbstractSleuthMethodInvocationProcessor.class);
-
-	private static final String CLASS_KEY = "class";
-
-	private static final String METHOD_KEY = "method";
 
 	BeanFactory beanFactory;
 
@@ -81,8 +78,8 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 	}
 
 	void addTags(MethodInvocation invocation, Span span) {
-		span.tag(CLASS_KEY, invocation.getThis().getClass().getSimpleName());
-		span.tag(METHOD_KEY, invocation.getMethod().getName());
+		Tag.of(SleuthAnnotationTags.CLASS, invocation.getThis().getClass().getSimpleName());
+		Tag.of(SleuthAnnotationTags.METHOD, invocation.getMethod().getName());
 	}
 
 	void logEvent(Span span, String name) {

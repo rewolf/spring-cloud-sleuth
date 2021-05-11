@@ -23,6 +23,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tag;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.lang.Nullable;
@@ -42,10 +43,6 @@ import org.springframework.lang.Nullable;
  */
 @Aspect
 public class TraceSchedulingAspect {
-
-	private static final String CLASS_KEY = "class";
-
-	private static final String METHOD_KEY = "method";
 
 	private final Tracer tracer;
 
@@ -68,8 +65,8 @@ public class TraceSchedulingAspect {
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
 		Span span = startOrContinueRenamedSpan(spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
-			span.tag(CLASS_KEY, pjp.getTarget().getClass().getSimpleName());
-			span.tag(METHOD_KEY, pjp.getSignature().getName());
+			Tag.of(SleuthSchedulingTags.CLASS, pjp.getTarget().getClass().getSimpleName()).tag(span);
+			Tag.of(SleuthSchedulingTags.METHOD, pjp.getSignature().getName()).tag(span);
 			return pjp.proceed();
 		}
 		catch (Throwable ex) {

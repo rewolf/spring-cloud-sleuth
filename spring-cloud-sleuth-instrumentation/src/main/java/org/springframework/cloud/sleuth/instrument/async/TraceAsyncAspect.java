@@ -59,8 +59,8 @@ public class TraceAsyncAspect {
 		}
 		span = span.name(spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
-			Tag.of(AsyncTags.ASYNC_CLASS, pjp.getTarget().getClass().getSimpleName()).tag(span);
-			Tag.of(AsyncTags.ASYNC_METHOD, pjp.getSignature().getName()).tag(span);
+			Tag.of(SleuthAsyncTags.CLASS, pjp.getTarget().getClass().getSimpleName()).tag(span);
+			Tag.of(SleuthAsyncTags.METHOD, pjp.getSignature().getName()).tag(span);
 			return pjp.proceed();
 		}
 		finally {

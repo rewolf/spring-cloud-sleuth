@@ -24,33 +24,22 @@ import org.springframework.lang.Nullable;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Immutable {@link Tag}.
- * Taken from Micrometer
+ * Immutable {@link Tag}. Taken from Micrometer
  *
  * @author Jon Schneider
  * @since 3.0.3
  */
 public class ImmutableTag implements Tag {
+
 	private final TagKey key;
 
 	private final String value;
-
-	private final String description;
 
 	public ImmutableTag(@NonNull TagKey key, @NonNull String value) {
 		requireNonNull(key);
 		requireNonNull(value);
 		this.key = key;
 		this.value = value;
-		this.description = "";
-	}
-
-	public ImmutableTag(@NonNull String key, @NonNull String value, @NonNull String description) {
-		requireNonNull(key);
-		requireNonNull(value);
-		this.key = () -> key;
-		this.value = value;
-		this.description = description;
 	}
 
 	@Override
@@ -72,8 +61,7 @@ public class ImmutableTag implements Tag {
 			return false;
 		}
 		Tag that = (Tag) o;
-		return Objects.equals(this.key, that.getTagKey()) &&
-				Objects.equals(this.value, that.getValue());
+		return Objects.equals(this.key, that.getTagKey()) && Objects.equals(this.value, that.getValue());
 	}
 
 	@Override
@@ -87,4 +75,5 @@ public class ImmutableTag implements Tag {
 	public String toString() {
 		return "tag(" + this.key + "=" + this.value + ")";
 	}
+
 }

@@ -17,13 +17,14 @@
 package org.springframework.cloud.sleuth;
 
 /**
- * Key/value pair representing a dimension of a span used to classify and drill into measurements.
- * Inspired by Micrometer.
+ * Key/value pair representing a dimension of a span used to classify and drill into
+ * measurements. Inspired by Micrometer.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3
  */
 public interface Tag extends Comparable<Tag> {
+
 	/**
 	 * @return tag key
 	 */
@@ -43,11 +44,28 @@ public interface Tag extends Comparable<Tag> {
 
 	/**
 	 * Will apply the tag for the given key and value.
-	 *
 	 * @param span to tag
 	 * @return tagged span
 	 */
 	default Span tag(Span span) {
+		return span.tag(getTagKey().getKey(), getValue());
+	}
+
+	/**
+	 * Will apply the tag for the given key and value.
+	 * @param span to tag
+	 * @return tagged span
+	 */
+	default Span.Builder tag(Span.Builder span) {
+		return span.tag(getTagKey().getKey(), getValue());
+	}
+
+	/**
+	 * Will apply the tag for the given key and value.
+	 * @param span to tag
+	 * @return tagged span
+	 */
+	default SpanCustomizer tag(SpanCustomizer span) {
 		return span.tag(getTagKey().getKey(), getValue());
 	}
 
@@ -57,9 +75,7 @@ public interface Tag extends Comparable<Tag> {
 	}
 
 	/**
-	 * Used for static tag keys. Typically {@link TagKey} will be implemented
-	 * by an enum.
-	 *
+	 * Used for static tag keys. Typically {@link TagKey} will be implemented by an enum.
 	 * @param key tag key
 	 * @param value tag value
 	 * @return tag
@@ -68,14 +84,4 @@ public interface Tag extends Comparable<Tag> {
 		return new ImmutableTag(key, value);
 	}
 
-	/**
-	 * Used for dynamic tag keys.
-	 *
-	 * @param key tag key
-	 * @param value tag value
-	 * @return tag
-	 */
-	static Tag of(String key, String value, String description) {
-		return new ImmutableTag(key, value, description);
-	}
 }

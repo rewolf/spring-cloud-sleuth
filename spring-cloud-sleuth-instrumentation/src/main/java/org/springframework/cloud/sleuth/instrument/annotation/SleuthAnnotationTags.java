@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.async;
+package org.springframework.cloud.sleuth.instrument.annotation;
 
 import org.springframework.cloud.sleuth.TagKey;
 
 /**
- * Tags related to async processing.
+ * Tags related to Sleuth annotations.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3
  */
-public enum AsyncTags implements TagKey {
+public enum SleuthAnnotationTags implements TagKey {
 
 	/**
-	 * Class name where a method got annotated with @Async.
+	 * Class name where a method got annotated with a Sleuth annotation.
 	 */
-	ASYNC_CLASS {
+	CLASS {
 		@Override
 		public String getKey() {
 			return "class";
@@ -37,12 +37,13 @@ public enum AsyncTags implements TagKey {
 	},
 
 	/**
-	 * Method name that got annotated with @Async.
+	 * Method name that got annotated with Sleuth annotation.
 	 */
-	ASYNC_METHOD {
+	METHOD {
 		@Override
 		public String getKey() {
 			return "method";
 		}
 	}
+
 }

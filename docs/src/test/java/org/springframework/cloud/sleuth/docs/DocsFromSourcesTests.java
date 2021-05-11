@@ -32,6 +32,8 @@ class DocsFromSourcesTests {
 
 		new DocsFromSources(root, ".*", output).generate();
 
-		BDDAssertions.then(new String(Files.readAllBytes(new File(output, "__tags.adoc").toPath()))).contains("|bar|Some description.");
+		BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_tags.adoc").toPath())))
+				.contains("|bar|Some description.");
 	}
+
 }

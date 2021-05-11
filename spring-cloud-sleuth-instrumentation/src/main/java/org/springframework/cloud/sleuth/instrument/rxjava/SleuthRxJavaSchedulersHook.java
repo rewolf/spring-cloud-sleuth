@@ -30,6 +30,7 @@ import rx.plugins.RxJavaPlugins;
 import rx.plugins.RxJavaSchedulersHook;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tag;
 import org.springframework.cloud.sleuth.Tracer;
 
 /**
@@ -113,8 +114,6 @@ public class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 	 */
 	static class TraceAction implements Action0 {
 
-		private static final String THREAD_NAME_KEY = "thread";
-
 		private final Action0 actual;
 
 		private final Tracer tracer;
@@ -150,7 +149,7 @@ public class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			boolean created = false;
 			if (span == null) {
 				span = this.tracer.nextSpan().name(RXJAVA_COMPONENT).start();
-				span.tag(THREAD_NAME_KEY, Thread.currentThread().getName());
+				Tag.of(SleuthRxJavaTags.THREAD, Thread.currentThread().getName()).tag(span);
 				created = true;
 			}
 			try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {

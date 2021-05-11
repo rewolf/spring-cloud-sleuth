@@ -114,7 +114,7 @@
 									<arguments>
 										<argument>${maven.multiModuleProjectDirectory}</argument>
 										<argument>${module.inclusionPattern}</argument>
-										<argument>${project.build.directory}</argument>
+										<argument>${maven.multiModuleProjectDirectory}/docs/src/main/asciidoc/</argument>
 									</arguments>
 								</configuration>
 							</execution>

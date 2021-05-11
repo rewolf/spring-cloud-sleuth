@@ -1,0 +1,16 @@
+.Spring Cloud Sleuth Tags
+|===
+|Name | Description
+|channel|Name of the Spring Integration channel.
+|class|Class name where a method got annotated with a Sleuth annotation.
+|class|Class name where a method got annotated with @Async.
+|class|Class name where a method got annotated with @Scheduled.
+|http.status_code|Response status code.
+|method|Method name that got annotated with Sleuth annotation.
+|method|Method name that got annotated with @Async.
+|method|Method name that got annotated with @Scheduled.
+|mvc.controller.class|Name of the class that is processing the request.
+|mvc.controller.method|Name of the method that is processing the request.
+|quartz.trigger|Name of the trigger.
+|thread|Name of the thread.
+|===

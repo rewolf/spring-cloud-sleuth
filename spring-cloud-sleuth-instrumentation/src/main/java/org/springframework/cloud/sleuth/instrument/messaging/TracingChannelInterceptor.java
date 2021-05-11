@@ -376,6 +376,7 @@ public final class TracingChannelInterceptor extends ChannelInterceptorAdapter
 			if (message == null) {
 				message = error.getClass().getSimpleName();
 			}
+			// TODO: Go with span.error(...)
 			span.tag("error", message);
 		}
 		if (log.isDebugEnabled()) {

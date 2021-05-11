@@ -1,6 +1,13 @@
 :numbered!:
 
 [[appendix]]
+[[sleuth-tags]]
+== Sleuth tags
+
+Below you can find a list of all the tags that are set by Sleuth
+
+include::_tags.adoc[]
+
 [[common-application-properties]]
 == Common application properties
 

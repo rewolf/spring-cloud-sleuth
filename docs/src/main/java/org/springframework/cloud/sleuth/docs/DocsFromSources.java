@@ -47,10 +47,7 @@ public class DocsFromSources {
 
 	private static final Log logger = LogFactory.getLog(DocsFromSources.class);
 
-	private static final String ADOC_HEADER =
-			".Spring Cloud Sleuth Tags\n"
-			+ "|===\n"
-			+ "|Name | Description\n";
+	private static final String ADOC_HEADER = ".Spring Cloud Sleuth Tags\n" + "|===\n" + "|Name | Description\n";
 
 	private final File projectRoot;
 
@@ -79,12 +76,12 @@ public class DocsFromSources {
 		List<TagKey> tagKeys = new ArrayList<>();
 		FileVisitor<Path> fv = new SimpleFileVisitor<Path>() {
 			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-					throws IOException {
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 				if (!pattern.matcher(file.toString()).matches()) {
 					logger.trace("File [" + file.toString() + "] doesn't match the inclusion pattern");
 					return FileVisitResult.CONTINUE;
-				} else if (!file.toString().endsWith(".java")) {
+				}
+				else if (!file.toString().endsWith(".java")) {
 					logger.trace("Skipping [" + file.toString() + "] cause it's not java");
 					return FileVisitResult.CONTINUE;
 				}
@@ -95,25 +92,32 @@ public class DocsFromSources {
 					return FileVisitResult.CONTINUE;
 				}
 				JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
-				if (!myEnum.getInterfaces().contains(org.springframework.cloud.sleuth.TagKey.class.getCanonicalName())) {
-					logger.debug("Will skip [" + myClass.getCanonicalName() + "] cause this enum does not implement [" + org.springframework.cloud.sleuth.TagKey.class.getCanonicalName() + "]");
+				if (!myEnum.getInterfaces()
+						.contains(org.springframework.cloud.sleuth.TagKey.class.getCanonicalName())) {
+					logger.debug("Will skip [" + myClass.getCanonicalName() + "] cause this enum does not implement ["
+							+ org.springframework.cloud.sleuth.TagKey.class.getCanonicalName() + "]");
 					return FileVisitResult.CONTINUE;
 				}
 				logger.info("Checking [" + myEnum.getName() + "]");
+				if (myEnum.getEnumConstants().size() == 0) {
+					logger.debug("Will skip [" + myClass.getCanonicalName() + "] cause this enum is empty");
+					return FileVisitResult.CONTINUE;
+				}
 				for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
 					String name = enumKeyValue(enumConstant);
 					String description = enumConstant.getJavaDoc().getText();
 					tagKeys.add(new TagKey(name, description));
 				}
-				logger.info("Found [" + tagKeys.size() + "] tag key entries");
+				logger.info("Found [" + myEnum.getEnumConstants().size() + "] tag key entries in this class");
 				return FileVisitResult.CONTINUE;
 			}
 		};
 
 		try {
 			Files.walkFileTree(path, fv);
-			Path output = new File(this.outputDir, "__tags.adoc").toPath();
+			Path output = new File(this.outputDir, "_tags.adoc").toPath();
 			StringBuilder stringBuilder = new StringBuilder().append(ADOC_HEADER);
+			logger.info("Found [" + tagKeys.size() + "] tag keys");
 			Collections.sort(tagKeys);
 			tagKeys.forEach(tag -> stringBuilder.append(tag.toString()).append("\n"));
 			stringBuilder.append("|===");
@@ -153,10 +157,13 @@ public class DocsFromSources {
 		}
 		return ((StringLiteral) expression).getLiteralValue();
 	}
+
 }
 
 class TagKey implements Comparable<TagKey> {
+
 	final String name;
+
 	final String description;
 
 	TagKey(String name, String description) {
@@ -173,8 +180,7 @@ class TagKey implements Comparable<TagKey> {
 			return false;
 		}
 		TagKey tag = (TagKey) o;
-		return Objects.equals(name, tag.name) &&
-				Objects.equals(description, tag.description);
+		return Objects.equals(name, tag.name) && Objects.equals(description, tag.description);
 	}
 
 	@Override
@@ -191,4 +197,5 @@ class TagKey implements Comparable<TagKey> {
 	public String toString() {
 		return "|" + name + "|" + description;
 	}
+
 }

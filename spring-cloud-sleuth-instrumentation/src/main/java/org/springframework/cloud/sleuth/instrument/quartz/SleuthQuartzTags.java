@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,31 +14,26 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.docs;
+package org.springframework.cloud.sleuth.instrument.quartz;
 
-import org.mockito.Mockito;
-
-import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tag;
 import org.springframework.cloud.sleuth.TagKey;
 
-enum SampleTag implements TagKey {
+/**
+ * Tags related to Quartz.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.3
+ */
+public enum SleuthQuartzTags implements TagKey {
 
 	/**
-	 * Some description.
+	 * Name of the trigger.
 	 */
-	FOO {
+	TRIGGER {
 		@Override
 		public String getKey() {
-			return "bar";
+			return "quartz.trigger";
 		}
-	};
-
-	static void usageExample() {
-		String someValue = "the value";
-		Span span = Mockito.mock(Span.class);
-		// Example of usage in code
-		Tag.of(SampleTag.FOO, someValue).tag(span);
 	}
 
 }
