@@ -78,8 +78,8 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 	}
 
 	void addTags(MethodInvocation invocation, Span span) {
-		Tag.of(SleuthAnnotationTags.CLASS, invocation.getThis().getClass().getSimpleName());
-		Tag.of(SleuthAnnotationTags.METHOD, invocation.getMethod().getName());
+		Tag.of(SleuthAnnotationTags.CLASS, invocation.getThis().getClass().getSimpleName()).tag(span);
+		Tag.of(SleuthAnnotationTags.METHOD, invocation.getMethod().getName()).tag(span);
 	}
 
 	void logEvent(Span span, String name) {
