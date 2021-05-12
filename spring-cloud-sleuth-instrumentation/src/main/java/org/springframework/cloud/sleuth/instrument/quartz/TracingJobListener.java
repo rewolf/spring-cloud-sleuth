@@ -67,8 +67,7 @@ public class TracingJobListener implements JobListener, TriggerListener {
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		Span nextSpan = propagator.extract(context.getMergedJobDataMap(), GETTER).start();
-		Span span = nextSpan.name(context.getTrigger().getJobKey().toString());
-		Tag.of(SleuthQuartzTags.TRIGGER, context.getTrigger().getKey().toString()).tag(span);
+		Span span = Tag.of(SleuthQuartzTags.TRIGGER, context.getTrigger().getKey().toString()).tag(nextSpan).name(context.getTrigger().getJobKey().toString());
 		context.put(CONTEXT_SPAN_KEY, span);
 		context.put(CONTEXT_SPAN_IN_SCOPE_KEY, tracer.withSpan(span.start()));
 	}

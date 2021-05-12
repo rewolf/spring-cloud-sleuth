@@ -44,29 +44,12 @@ public interface Tag extends Comparable<Tag> {
 
 	/**
 	 * Will apply the tag for the given key and value.
-	 * @param span to tag
+	 * @param taggable to tag
 	 * @return tagged span
 	 */
-	default Span tag(Span span) {
-		return span.tag(getTagKey().getKey(), getValue());
-	}
-
-	/**
-	 * Will apply the tag for the given key and value.
-	 * @param span to tag
-	 * @return tagged span
-	 */
-	default Span.Builder tag(Span.Builder span) {
-		return span.tag(getTagKey().getKey(), getValue());
-	}
-
-	/**
-	 * Will apply the tag for the given key and value.
-	 * @param span to tag
-	 * @return tagged span
-	 */
-	default SpanCustomizer tag(SpanCustomizer span) {
-		return span.tag(getTagKey().getKey(), getValue());
+	@SuppressWarnings("unchecked")
+	default <T extends Taggable> T tag(T taggable) {
+		return (T) taggable.tag(getTagKey().getKey(), getValue());
 	}
 
 	@Override

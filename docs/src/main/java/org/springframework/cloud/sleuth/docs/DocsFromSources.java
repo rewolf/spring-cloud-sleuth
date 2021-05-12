@@ -18,6 +18,7 @@ package org.springframework.cloud.sleuth.docs;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -85,31 +86,33 @@ public class DocsFromSources {
 					logger.trace("Skipping [" + file.toString() + "] cause it's not java");
 					return FileVisitResult.CONTINUE;
 				}
-				JavaUnit unit = Roaster.parseUnit(Files.newInputStream(file));
-				JavaType myClass = unit.getGoverningType();
-				if (!(myClass instanceof JavaEnumImpl)) {
-					logger.trace("Will skip [" + myClass.getCanonicalName() + "] cause it's not an enum");
+				try (InputStream stream = Files.newInputStream(file)) {
+					JavaUnit unit = Roaster.parseUnit(stream);
+					JavaType myClass = unit.getGoverningType();
+					if (!(myClass instanceof JavaEnumImpl)) {
+						logger.trace("Will skip [" + myClass.getCanonicalName() + "] cause it's not an enum");
+						return FileVisitResult.CONTINUE;
+					}
+					JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
+					if (!myEnum.getInterfaces()
+							.contains(org.springframework.cloud.sleuth.TagKey.class.getCanonicalName())) {
+						logger.debug("Will skip [" + myClass.getCanonicalName() + "] cause this enum does not implement ["
+								+ org.springframework.cloud.sleuth.TagKey.class.getCanonicalName() + "]");
+						return FileVisitResult.CONTINUE;
+					}
+					logger.info("Checking [" + myEnum.getName() + "]");
+					if (myEnum.getEnumConstants().size() == 0) {
+						logger.debug("Will skip [" + myClass.getCanonicalName() + "] cause this enum is empty");
+						return FileVisitResult.CONTINUE;
+					}
+					for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
+						String name = enumKeyValue(enumConstant);
+						String description = enumConstant.getJavaDoc().getText();
+						tagKeys.add(new TagKey(name, description));
+					}
+					logger.info("Found [" + myEnum.getEnumConstants().size() + "] tag key entries in this class");
 					return FileVisitResult.CONTINUE;
 				}
-				JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
-				if (!myEnum.getInterfaces()
-						.contains(org.springframework.cloud.sleuth.TagKey.class.getCanonicalName())) {
-					logger.debug("Will skip [" + myClass.getCanonicalName() + "] cause this enum does not implement ["
-							+ org.springframework.cloud.sleuth.TagKey.class.getCanonicalName() + "]");
-					return FileVisitResult.CONTINUE;
-				}
-				logger.info("Checking [" + myEnum.getName() + "]");
-				if (myEnum.getEnumConstants().size() == 0) {
-					logger.debug("Will skip [" + myClass.getCanonicalName() + "] cause this enum is empty");
-					return FileVisitResult.CONTINUE;
-				}
-				for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-					String name = enumKeyValue(enumConstant);
-					String description = enumConstant.getJavaDoc().getText();
-					tagKeys.add(new TagKey(name, description));
-				}
-				logger.info("Found [" + myEnum.getEnumConstants().size() + "] tag key entries in this class");
-				return FileVisitResult.CONTINUE;
 			}
 		};
 
@@ -141,7 +144,7 @@ public class DocsFromSources {
 		}
 		MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
 		if (methodDeclaration.getBody().statements().isEmpty()) {
-			logger.warn("No return statements found. Continuing...");
+			logger.warn("Body was empty. Continuing...");
 			return "";
 		}
 		Object statement = methodDeclaration.getBody().statements().get(0);
