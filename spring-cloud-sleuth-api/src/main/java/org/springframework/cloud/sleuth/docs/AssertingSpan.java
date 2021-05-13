@@ -30,7 +30,7 @@ import org.springframework.cloud.sleuth.TraceContext;
  */
 public interface AssertingSpan extends Span {
 
-	/**
+
 	DocumentedSpan getDocumentedSpan();
 
 	Span getDelegate();
