@@ -31,7 +31,7 @@ import reactor.util.context.Context;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tag;
+import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;

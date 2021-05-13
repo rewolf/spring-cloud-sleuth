@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.annotation;
 
-import org.springframework.cloud.sleuth.TagKey;
+import org.springframework.cloud.sleuth.docs.TagKey;
 
 /**
  * Tags related to Sleuth annotations.

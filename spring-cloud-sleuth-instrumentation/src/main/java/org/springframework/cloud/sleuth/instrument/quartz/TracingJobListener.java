@@ -25,7 +25,7 @@ import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerListener;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tag;
+import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 

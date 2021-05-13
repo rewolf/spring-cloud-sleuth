@@ -28,7 +28,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tag;
+import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.cloud.sleuth.propagation.Propagator;

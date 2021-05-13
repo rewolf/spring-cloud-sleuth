@@ -16,7 +16,7 @@
 
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
-import org.springframework.cloud.sleuth.TagKey;
+import org.springframework.cloud.sleuth.docs.TagKey;
 
 /**
  * Tags related to RX Java.

@@ -19,8 +19,6 @@ package org.springframework.cloud.sleuth.docs;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.Tag;
-import org.springframework.cloud.sleuth.TagKey;
 
 enum SampleTag implements TagKey {
 

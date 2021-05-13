@@ -14,46 +14,45 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.web;
-
-import org.springframework.cloud.sleuth.docs.TagKey;
+package org.springframework.cloud.sleuth.docs;
 
 /**
- * Tags related to web.
+ * Value representing a notable event happening in time.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3
  */
-public enum SleuthWebTags implements TagKey {
+public interface Event {
 
 	/**
-	 * Name of the class that is processing the request.
+	 * @return tag value
 	 */
-	CLASS {
-		@Override
-		public String getKey() {
-			return "mvc.controller.class";
-		}
-	},
+	String getValue();
 
 	/**
-	 * Name of the method that is processing the request.
+	 * @return additional tag description
 	 */
-	METHOD {
-		@Override
-		public String getKey() {
-			return "mvc.controller.method";
-		}
-	},
+	default String getDescription() {
+		return "";
+	}
 
 	/**
-	 * Response status code.
+	 * Used for static events.
+	 * @param value event value
+	 * @return tag
 	 */
-	RESPONSE_STATUS_CODE {
-		@Override
-		public String getKey() {
-			return "http.status_code";
-		}
+	static Event of(EventValue value) {
+		return new ImmutableEvent(value.getValue());
+	}
+
+	/**
+	 * Used for dynamic events.
+	 * @param value event value
+	 * @param parameters parameters to be applied to the value
+	 * @return tag
+	 */
+	static Event of(EventValue value, String... parameters) {
+		return new ImmutableEvent(String.format(value.getValue(), parameters));
 	}
 
 }

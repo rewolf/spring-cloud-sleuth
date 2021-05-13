@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.docs;
 
 /**
  * Key/value pair representing a dimension of a span used to classify and drill into
@@ -40,16 +40,6 @@ public interface Tag extends Comparable<Tag> {
 	 */
 	default String getDescription() {
 		return "";
-	}
-
-	/**
-	 * Will apply the tag for the given key and value.
-	 * @param taggable to tag
-	 * @return tagged span
-	 */
-	@SuppressWarnings("unchecked")
-	default <T extends Taggable> T tag(T taggable) {
-		return (T) taggable.tag(getTagKey().getKey(), getValue());
 	}
 
 	@Override

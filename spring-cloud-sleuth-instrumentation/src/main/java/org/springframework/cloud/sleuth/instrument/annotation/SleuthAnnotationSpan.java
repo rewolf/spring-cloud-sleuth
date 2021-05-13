@@ -14,20 +14,31 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.instrument.annotation;
 
-/**
- * Key pair representing a dimension of a span used to classify and drill into
- * measurements. Inspired by Micrometer.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.3
- */
-public interface TagKey {
+import org.springframework.cloud.sleuth.docs.DocumentedSpan;
+import org.springframework.cloud.sleuth.docs.EventValue;
+import org.springframework.cloud.sleuth.docs.TagKey;
 
+enum SleuthAnnotationSpan implements DocumentedSpan {
 	/**
-	 * @return tag key
+	 * Span that wraps a @NewSpan or @ContinueSpan annotations.
 	 */
-	String getKey();
+	NEW_OR_CONTINUE_SPAN_ANNOTATION {
+		@Override
+		public String getName() {
+			return "%s";
+		}
 
+		@Override
+		public TagKey[] getTagKeys() {
+			return SleuthAnnotationTags.values();
+		}
+
+		@Override
+		public EventValue[] getEvents() {
+			return SleuthAnnotationEvents.values();
+		}
+
+	}
 }

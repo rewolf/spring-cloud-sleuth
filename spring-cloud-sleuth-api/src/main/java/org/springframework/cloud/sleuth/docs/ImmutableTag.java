@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth;
+package org.springframework.cloud.sleuth.docs;
 
 import java.util.Objects;
 
@@ -23,19 +23,13 @@ import org.springframework.lang.Nullable;
 
 import static java.util.Objects.requireNonNull;
 
-/**
- * Immutable {@link Tag}. Taken from Micrometer
- *
- * @author Jon Schneider
- * @since 3.0.3
- */
-public class ImmutableTag implements Tag {
+class ImmutableTag implements Tag {
 
 	private final TagKey key;
 
 	private final String value;
 
-	public ImmutableTag(@NonNull TagKey key, @NonNull String value) {
+	ImmutableTag(@NonNull TagKey key, @NonNull String value) {
 		requireNonNull(key);
 		requireNonNull(value);
 		this.key = key;

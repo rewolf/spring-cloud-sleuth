@@ -18,7 +18,7 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
-import org.springframework.cloud.sleuth.Tag;
+import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;

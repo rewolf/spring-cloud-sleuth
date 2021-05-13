@@ -14,35 +14,39 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.scheduling;
+package org.springframework.cloud.sleuth.instrument.annotation;
 
-import org.springframework.cloud.sleuth.docs.TagKey;
+import org.springframework.cloud.sleuth.docs.EventValue;
 
-/**
- * Tags related to async processing.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.3
- */
-public enum SleuthSchedulingTags implements TagKey {
+enum SleuthAnnotationEvents implements EventValue {
 
 	/**
-	 * Class name where a method got annotated with @Scheduled.
+	 * Annotated before executing a method annotated with @ContinueSpan or @NewSpan.
 	 */
-	CLASS {
+	BEFORE {
 		@Override
-		public String getKey() {
-			return "class";
+		public String getValue() {
+			return "%s.before";
 		}
 	},
 
 	/**
-	 * Method name that got annotated with @Scheduled.
+	 * Annotated after executing a method annotated with @ContinueSpan or @NewSpan.
 	 */
-	METHOD {
+	AFTER {
 		@Override
-		public String getKey() {
-			return "method";
+		public String getValue() {
+			return "%s.after";
+		}
+	},
+
+	/**
+	 * Annotated after throwing an exception from a method annotated with @ContinueSpan or @NewSpan.
+	 */
+	AFTER_FAILURE {
+		@Override
+		public String getValue() {
+			return "%.afterFailure";
 		}
 	}
 

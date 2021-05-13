@@ -23,7 +23,7 @@ package org.springframework.cloud.sleuth;
  * @author Marcin Grzejszczak
  * @since 3.0.0
  */
-public interface SpanCustomizer extends Taggable {
+public interface SpanCustomizer {
 
 	/**
 	 * Sets a name on a span.
@@ -32,7 +32,12 @@ public interface SpanCustomizer extends Taggable {
 	 */
 	SpanCustomizer name(String name);
 
-	@Override
+	/**
+	 * Sets a tag on a span.
+	 * @param key tag key
+	 * @param value tag value
+	 * @return this, for chaining
+	 */
 	SpanCustomizer tag(String key, String value);
 
 	/**

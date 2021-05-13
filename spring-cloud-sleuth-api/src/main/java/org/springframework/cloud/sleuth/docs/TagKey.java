@@ -14,26 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.quartz;
-
-import org.springframework.cloud.sleuth.docs.TagKey;
+package org.springframework.cloud.sleuth.docs;
 
 /**
- * Tags related to Quartz.
+ * Key pair representing a dimension of a span used to classify and drill into
+ * measurements. Inspired by Micrometer.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3
  */
-public enum SleuthQuartzTags implements TagKey {
+public interface TagKey {
 
 	/**
-	 * Name of the trigger.
+	 * @return tag key
 	 */
-	TRIGGER {
-		@Override
-		public String getKey() {
-			return "quartz.trigger";
-		}
-	}
+	String getKey();
 
 }

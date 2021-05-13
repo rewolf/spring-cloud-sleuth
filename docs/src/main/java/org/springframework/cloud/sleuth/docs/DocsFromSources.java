@@ -95,9 +95,9 @@ public class DocsFromSources {
 					}
 					JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
 					if (!myEnum.getInterfaces()
-							.contains(org.springframework.cloud.sleuth.TagKey.class.getCanonicalName())) {
+							.contains(TagKey.class.getCanonicalName())) {
 						logger.debug("Will skip [" + myClass.getCanonicalName() + "] cause this enum does not implement ["
-								+ org.springframework.cloud.sleuth.TagKey.class.getCanonicalName() + "]");
+								+ TagKey.class.getCanonicalName() + "]");
 						return FileVisitResult.CONTINUE;
 					}
 					logger.info("Checking [" + myEnum.getName() + "]");

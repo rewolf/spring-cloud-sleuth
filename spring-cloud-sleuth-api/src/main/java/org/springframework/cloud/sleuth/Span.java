@@ -64,7 +64,12 @@ public interface Span extends SpanCustomizer {
 	 */
 	Span event(String value);
 
-	@Override
+	/**
+	 * Sets a tag on this span.
+	 * @param key tag key
+	 * @param value tag value
+	 * @return this span
+	 */
 	Span tag(String key, String value);
 
 	/**
@@ -139,7 +144,7 @@ public interface Span extends SpanCustomizer {
 	 *
 	 * Inspired by OpenZipkin Brave and OpenTelemetry API.
 	 */
-	interface Builder extends Taggable {
+	interface Builder {
 
 		/**
 		 * Sets the parent of the built span.
@@ -168,7 +173,12 @@ public interface Span extends SpanCustomizer {
 		 */
 		Builder event(String value);
 
-		@Override
+		/**
+		 * Sets a tag on the span.
+		 * @param key tag key
+		 * @param value tag value
+		 * @return this
+		 */
 		Builder tag(String key, String value);
 
 		/**
