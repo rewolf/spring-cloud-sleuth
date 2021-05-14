@@ -25,8 +25,8 @@ import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerListener;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 
 /**
@@ -67,7 +67,7 @@ public class TracingJobListener implements JobListener, TriggerListener {
 	@Override
 	public void triggerFired(Trigger trigger, JobExecutionContext context) {
 		Span nextSpan = propagator.extract(context.getMergedJobDataMap(), GETTER).start();
-		Span span = Tag.of(SleuthQuartzTags.TRIGGER, context.getTrigger().getKey().toString()).tag(nextSpan).name(context.getTrigger().getJobKey().toString());
+		AssertingSpan span = SleuthQuartzSpan.TRIGGER_SPAN.wrap(nextSpan).tag(SleuthQuartzSpan.Tags.TRIGGER, context.getTrigger().getKey().toString()).name(context.getTrigger().getJobKey().toString());
 		context.put(CONTEXT_SPAN_KEY, span);
 		context.put(CONTEXT_SPAN_IN_SCOPE_KEY, tracer.withSpan(span.start()));
 	}

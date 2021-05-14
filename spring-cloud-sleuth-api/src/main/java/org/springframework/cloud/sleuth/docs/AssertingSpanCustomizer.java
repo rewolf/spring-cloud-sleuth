@@ -19,10 +19,10 @@ package org.springframework.cloud.sleuth.docs;
 import org.springframework.cloud.sleuth.SpanCustomizer;
 
 /**
- * In order to describe your spans via e.g. enums instead of Strings
- * you can use this interface that returns all the characteristics of a span.
- * In Spring Cloud Sleuth we analyze the sources and reuse this
- * information to build a table of known spans, their names, tags and events.
+ * In order to describe your spans via e.g. enums instead of Strings you can use this
+ * interface that returns all the characteristics of a span. In Spring Cloud Sleuth we
+ * analyze the sources and reuse this information to build a table of known spans, their
+ * names, tags and events.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3

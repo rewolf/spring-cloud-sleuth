@@ -110,12 +110,14 @@
 									<goal>java</goal>
 								</goals>
 								<configuration>
-									<mainClass>org.springframework.cloud.sleuth.docs.DocsFromSources</mainClass>
+									<mainClass>org.springframework.cloud.sleuth.documentation.DocsFromSources</mainClass>
 									<arguments>
 										<argument>${maven.multiModuleProjectDirectory}</argument>
 										<argument>${module.inclusionPattern}</argument>
 										<argument>${maven.multiModuleProjectDirectory}/docs/src/main/asciidoc/</argument>
 									</arguments>
+									<includeProjectDependencies>true</includeProjectDependencies>
+									<includePluginDependencies>true</includePluginDependencies>
 								</configuration>
 							</execution>
 						</executions>

@@ -22,11 +22,11 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-;
+
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanNamer;
-import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.util.ReflectionUtils;
 
@@ -58,9 +58,11 @@ public class TraceAsyncAspect {
 			span = this.tracer.nextSpan();
 		}
 		span = span.name(spanName);
-		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
-			Tag.of(SleuthAsyncTags.CLASS, pjp.getTarget().getClass().getSimpleName()).tag(span);
-			Tag.of(SleuthAsyncTags.METHOD, pjp.getSignature().getName()).tag(span);
+		AssertingSpan assertingSpan = SleuthAsyncSpan.ASYNC_ANNOTATION_SPAN.wrap(span);
+		try (Tracer.SpanInScope ws = this.tracer.withSpan(assertingSpan.start())) {
+			assertingSpan
+					.tag(SleuthAsyncSpan.Tags.CLASS, pjp.getTarget().getClass().getSimpleName())
+					.tag(SleuthAsyncSpan.Tags.METHOD, pjp.getSignature().getName());
 			return pjp.proceed();
 		}
 		finally {

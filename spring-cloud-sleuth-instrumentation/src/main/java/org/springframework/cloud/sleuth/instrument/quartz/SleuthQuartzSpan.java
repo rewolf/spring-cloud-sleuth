@@ -14,36 +14,38 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.scheduling;
+package org.springframework.cloud.sleuth.instrument.quartz;
 
+import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
-/**
- * Tags related to async processing.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.3
- */
-public enum SleuthSchedulingTags implements TagKey {
-
+enum SleuthQuartzSpan implements DocumentedSpan {
 	/**
-	 * Class name where a method got annotated with @Scheduled.
+	 * Span created when trigger is fired and then completed.
 	 */
-	CLASS {
+	TRIGGER_SPAN {
 		@Override
-		public String getKey() {
-			return "class";
+		public String getName() {
+			return "%s";
 		}
-	},
 
-	/**
-	 * Method name that got annotated with @Scheduled.
-	 */
-	METHOD {
 		@Override
-		public String getKey() {
-			return "method";
+		public TagKey[] getTagKeys() {
+			return Tags.values();
 		}
+	};
+
+	enum Tags implements TagKey {
+
+		/**
+		 * Name of the trigger.
+		 */
+		TRIGGER {
+			@Override
+			public String getKey() {
+				return "quartz.trigger";
+			}
+		}
+
 	}
-
 }

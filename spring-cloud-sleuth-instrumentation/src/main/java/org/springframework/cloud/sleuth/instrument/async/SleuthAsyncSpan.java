@@ -16,34 +16,48 @@
 
 package org.springframework.cloud.sleuth.instrument.async;
 
+import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
-/**
- * Tags related to async processing.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.3
- */
-public enum SleuthAsyncTags implements TagKey {
-
+enum SleuthAsyncSpan implements DocumentedSpan {
 	/**
-	 * Class name where a method got annotated with @Async.
+	 * Span that wraps a @Async annotation. Either continues an existing
+	 * one or creates a new one if there was no present one.
 	 */
-	CLASS {
+	ASYNC_ANNOTATION_SPAN {
 		@Override
-		public String getKey() {
-			return "class";
+		public String getName() {
+			return "%s";
 		}
-	},
 
-	/**
-	 * Method name that got annotated with @Async.
-	 */
-	METHOD {
 		@Override
-		public String getKey() {
-			return "method";
+		public TagKey[] getTagKeys() {
+			return Tags.values();
 		}
+
+	};
+
+	enum Tags implements TagKey {
+
+		/**
+		 * Class name where a method got annotated with @Async.
+		 */
+		CLASS {
+			@Override
+			public String getKey() {
+				return "class";
+			}
+		},
+
+		/**
+		 * Method name that got annotated with @Async.
+		 */
+		METHOD {
+			@Override
+			public String getKey() {
+				return "method";
+			}
+		}
+
 	}
-
 }

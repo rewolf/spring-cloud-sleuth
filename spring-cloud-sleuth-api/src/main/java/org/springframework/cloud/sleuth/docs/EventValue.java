@@ -25,7 +25,7 @@ package org.springframework.cloud.sleuth.docs;
 public interface EventValue {
 
 	/**
-	 * @return tag key
+	 * @return event value
 	 */
 	String getValue();
 

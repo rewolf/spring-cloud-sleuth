@@ -28,7 +28,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.cloud.sleuth.propagation.Propagator;
@@ -188,13 +187,13 @@ class TraceMessageHandler {
 
 	private void addTags(Span.Builder result, String destinationName) {
 		if (StringUtils.hasText(destinationName)) {
-			Tag.of(SleuthMessageTags.CHANNEL, SpanNameUtil.shorten(destinationName)).tag(result);
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL, SpanNameUtil.shorten(destinationName));
 		}
 	}
 
 	private void addTags(Span result, String destinationName) {
 		if (StringUtils.hasText(destinationName)) {
-			Tag.of(SleuthMessageTags.CHANNEL, SpanNameUtil.shorten(destinationName)).tag(result);
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL, SpanNameUtil.shorten(destinationName));
 		}
 	}
 

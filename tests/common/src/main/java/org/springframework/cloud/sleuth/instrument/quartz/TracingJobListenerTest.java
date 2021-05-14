@@ -124,7 +124,7 @@ public abstract class TracingJobListenerTest implements TestTracingAwareSupplier
 		// expect
 		FinishedSpan span = tracerTest().handler().takeLocalSpan();
 		assertThat(span.getName()).isEqualToIgnoringCase(SUCCESSFUL_JOB_KEY.toString());
-		assertThat(span.getTags().get(SleuthQuartzTags.TRIGGER.getKey())).isEqualToIgnoringCase(TRIGGER_KEY.toString());
+		assertThat(span.getTags().get(SleuthQuartzSpan.Tags.TRIGGER.getKey())).isEqualToIgnoringCase(TRIGGER_KEY.toString());
 	}
 
 	@Test

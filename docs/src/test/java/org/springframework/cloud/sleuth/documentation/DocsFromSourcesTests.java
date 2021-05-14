@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.docs;
+package org.springframework.cloud.sleuth.documentation;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,8 +32,13 @@ class DocsFromSourcesTests {
 
 		new DocsFromSources(root, ".*", output).generate();
 
-		BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_tags.adoc").toPath())))
-				.contains("|bar|Some description.");
+		BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
+				.contains("=== ASYNC_ANNOTATION_SPAN").contains("> Span that wraps a")
+				.contains("**Span name** `%s` - since").contains("Fully qualified name of")
+				.contains("|class|Class name where a method got annotated with @Async.")
+				.contains("=== NEW_OR_CONTINUE_ANNOTATION_SPAN")
+				.contains("|%s.before|Annotated before executing a method annotated with @ContinueSpan or @NewSpan.")
+				.contains("=== TEST_SPAN").contains("**Span name** `fixed`.").contains("|foooooo|Test foo");
 	}
 
 }

@@ -17,12 +17,13 @@
 package org.springframework.cloud.sleuth.docs;
 
 import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.SpanCustomizer;
 
 /**
- * In order to describe your spans via e.g. enums instead of Strings
- * you can use this interface that returns all the characteristics of a span.
- * In Spring Cloud Sleuth we analyze the sources and reuse this
- * information to build a table of known spans, their names, tags and events.
+ * In order to describe your spans via e.g. enums instead of Strings you can use this
+ * interface that returns all the characteristics of a span. In Spring Cloud Sleuth we
+ * analyze the sources and reuse this information to build a table of known spans, their
+ * names, tags and events.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3
@@ -30,28 +31,49 @@ import org.springframework.cloud.sleuth.Span;
 public interface DocumentedSpan {
 
 	/**
-	 * @return spanName
+	 * @return span name
 	 */
 	String getName();
 
 	/**
 	 * @return tag keys
 	 */
-	TagKey[] getTagKeys();
+	default TagKey[] getTagKeys() {
+		return new TagKey[0];
+	}
 
 	/**
 	 * @return events
 	 */
-	EventValue[] getEvents();
+	default EventValue[] getEvents() {
+		return new EventValue[0];
+	}
 
 	/**
 	 * Asserts on tags, names and allowed events.
-	 *
 	 * @param span to wrap
 	 * @return wrapped span
 	 */
 	default AssertingSpan wrap(Span span) {
 		return AssertingSpan.of(this, span);
+	}
+
+	/**
+	 * Asserts on tags, names and allowed events.
+	 * @param span to wrap
+	 * @return wrapped span
+	 */
+	default AssertingSpanCustomizer wrap(SpanCustomizer span) {
+		return AssertingSpanCustomizer.of(this, span);
+	}
+
+	/**
+	 * Asserts on tags, names and allowed events.
+	 * @param span builder to wrap
+	 * @return wrapped span
+	 */
+	default AssertingSpanBuilder wrap(Span.Builder span) {
+		return AssertingSpanBuilder.of(this, span);
 	}
 
 }

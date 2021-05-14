@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
-import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.integration.channel.AbstractMessageChannel;
 import org.springframework.integration.context.IntegrationObjectSupport;
@@ -101,13 +100,13 @@ public class DefaultMessageSpanCustomizer implements MessageSpanCustomizer {
 
 	private void addTags(SpanCustomizer result, MessageChannel channel) {
 		if (channel != null) {
-			Tag.of(SleuthMessageTags.CHANNEL, messageChannelName(channel)).tag(result);
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL, messageChannelName(channel));
 		}
 	}
 
 	private void addTags(Span.Builder result, MessageChannel channel) {
 		if (channel != null) {
-			Tag.of(SleuthMessageTags.CHANNEL, messageChannelName(channel)).tag(result);
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL, messageChannelName(channel));
 		}
 	}
 

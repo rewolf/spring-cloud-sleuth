@@ -23,8 +23,8 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.docs.AssertingSpan;
 import org.springframework.cloud.sleuth.internal.SpanNameUtil;
 import org.springframework.lang.Nullable;
 
@@ -63,10 +63,11 @@ public class TraceSchedulingAspect {
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
-		Span span = startOrContinueRenamedSpan(spanName);
+		AssertingSpan span = SleuthSchedulingSpan.SCHEDULED_ANNOTATION_SPAN.wrap(startOrContinueSpan())
+				.name(spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
-			Tag.of(SleuthSchedulingTags.CLASS, pjp.getTarget().getClass().getSimpleName()).tag(span);
-			Tag.of(SleuthSchedulingTags.METHOD, pjp.getSignature().getName()).tag(span);
+			span.tag(SleuthSchedulingSpan.Tags.CLASS, pjp.getTarget().getClass().getSimpleName())
+					.tag(SleuthSchedulingSpan.Tags.METHOD, pjp.getSignature().getName());
 			return pjp.proceed();
 		}
 		catch (Throwable ex) {
@@ -78,12 +79,12 @@ public class TraceSchedulingAspect {
 		}
 	}
 
-	private Span startOrContinueRenamedSpan(String spanName) {
+	private Span startOrContinueSpan() {
 		Span currentSpan = this.tracer.currentSpan();
 		if (currentSpan != null) {
-			return currentSpan.name(spanName);
+			return currentSpan;
 		}
-		return this.tracer.nextSpan().name(spanName);
+		return this.tracer.nextSpan();
 	}
 
 }

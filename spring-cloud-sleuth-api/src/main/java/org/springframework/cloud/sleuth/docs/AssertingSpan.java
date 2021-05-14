@@ -20,20 +20,29 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 
 /**
- * In order to describe your spans via e.g. enums instead of Strings
- * you can use this interface that returns all the characteristics of a span.
- * In Spring Cloud Sleuth we analyze the sources and reuse this
- * information to build a table of known spans, their names, tags and events.
+ * In order to describe your spans via e.g. enums instead of Strings you can use this
+ * interface that returns all the characteristics of a span. In Spring Cloud Sleuth we
+ * analyze the sources and reuse this information to build a table of known spans, their
+ * names, tags and events.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3
  */
 public interface AssertingSpan extends Span {
 
-
+	/**
+	 * @return a {@link DocumentedSpan} with span configuration
+	 */
 	DocumentedSpan getDocumentedSpan();
 
+	/**
+	 * @return wrapped {@link Span}
+	 */
 	Span getDelegate();
+
+	default boolean isStarted() {
+		return false;
+	}
 
 	@Override
 	default AssertingSpan tag(String key, String value) {
@@ -42,6 +51,12 @@ public interface AssertingSpan extends Span {
 		return this;
 	}
 
+	/**
+	 * Tags a span via {@link TagKey}.
+	 * @param key tag key
+	 * @param value tag value
+	 * @return this for chaining
+	 */
 	default AssertingSpan tag(TagKey key, String value) {
 		DocumentedSpanAssertions.assertThatKeyIsValid(key, getDocumentedSpan().getTagKeys());
 		getDelegate().tag(key.getKey(), value);
@@ -55,6 +70,11 @@ public interface AssertingSpan extends Span {
 		return this;
 	}
 
+	/**
+	 * Annotates with an event via {@link EventValue}.
+	 * @param value event value
+	 * @return this for chaining
+	 */
 	default AssertingSpan event(EventValue value) {
 		DocumentedSpanAssertions.assertThatEventIsValid(value, getDocumentedSpan().getEvents());
 		getDelegate().event(value.getValue());
@@ -92,6 +112,7 @@ public interface AssertingSpan extends Span {
 
 	@Override
 	default void end() {
+		DocumentedSpanAssertions.assertThatSpanStartedBeforeEnd(this);
 		getDelegate().end();
 	}
 
@@ -109,4 +130,5 @@ public interface AssertingSpan extends Span {
 	static AssertingSpan of(DocumentedSpan documentedSpan, Span span) {
 		return new ImmutableAssertingSpan(documentedSpan, span);
 	}
+
 }

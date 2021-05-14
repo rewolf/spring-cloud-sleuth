@@ -77,9 +77,9 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 	}
 
 	void addTags(MethodInvocation invocation, Span span) {
-		SleuthAnnotationSpan.NEW_OR_CONTINUE_SPAN_ANNOTATION.wrap(span)
-				.tag(SleuthAnnotationTags.CLASS, invocation.getThis().getClass().getSimpleName())
-				.tag(SleuthAnnotationTags.METHOD, invocation.getMethod().getName());
+		SleuthAnnotationSpan.NEW_OR_CONTINUE_ANNOTATION_SPAN.wrap(span)
+				.tag(SleuthAnnotationSpan.Tags.CLASS, invocation.getThis().getClass().getSimpleName())
+				.tag(SleuthAnnotationSpan.Tags.METHOD, invocation.getMethod().getName());
 	}
 
 	void logEvent(Span span, String name) {
@@ -89,7 +89,7 @@ abstract class AbstractSleuthMethodInvocationProcessor implements SleuthMethodIn
 					+ "the same class then the aspect will not be properly resolved");
 			return;
 		}
-		SleuthAnnotationSpan.NEW_OR_CONTINUE_SPAN_ANNOTATION.wrap(span).event(name);
+		SleuthAnnotationSpan.NEW_OR_CONTINUE_ANNOTATION_SPAN.wrap(span).event(name);
 	}
 
 	String log(ContinueSpan continueSpan) {

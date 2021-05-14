@@ -20,8 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.cloud.sleuth.SpanCustomizer;
-import org.springframework.cloud.sleuth.docs.Tag;
-import org.springframework.cloud.sleuth.instrument.web.SleuthWebTags;
+import org.springframework.cloud.sleuth.docs.AssertingSpanCustomizer;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -46,11 +45,11 @@ public class HandlerParser {
 
 	/** Simple class name that processed the request. ex BookController */
 	// TODO: Remove me
-	public static final String CONTROLLER_CLASS = SleuthWebTags.CLASS.getKey();
+	public static final String CONTROLLER_CLASS = SleuthMvcSpan.Tags.CLASS.getKey();
 
 	/** Method name that processed the request. ex listOfBooks */
 	// TODO: Remove me
-	public static final String CONTROLLER_METHOD = SleuthWebTags.METHOD.getKey();
+	public static final String CONTROLLER_METHOD =SleuthMvcSpan.Tags.METHOD.getKey();
 
 	/**
 	 * Invoked prior to request invocation during
@@ -64,13 +63,14 @@ public class HandlerParser {
 	 * @param customizer span customizer
 	 */
 	protected void preHandle(HttpServletRequest request, Object handler, SpanCustomizer customizer) {
+		AssertingSpanCustomizer span = SleuthMvcSpan.HANDLER_INTERCEPTOR_SPAN.wrap(customizer);
 		if (WebMvcRuntime.get().isHandlerMethod(handler)) {
 			HandlerMethod handlerMethod = ((HandlerMethod) handler);
-			Tag.of(SleuthWebTags.CLASS, handlerMethod.getBeanType().getSimpleName()).tag(customizer);
-			Tag.of(SleuthWebTags.METHOD, handlerMethod.getMethod().getName()).tag(customizer);
+			span.tag(SleuthMvcSpan.Tags.CLASS, handlerMethod.getBeanType().getSimpleName());
+			span.tag(SleuthMvcSpan.Tags.METHOD, handlerMethod.getMethod().getName());
 		}
 		else {
-			Tag.of(SleuthWebTags.CLASS, handler.getClass().getSimpleName()).tag(customizer);
+			span.tag(SleuthMvcSpan.Tags.CLASS, handler.getClass().getSimpleName());
 		}
 	}
 

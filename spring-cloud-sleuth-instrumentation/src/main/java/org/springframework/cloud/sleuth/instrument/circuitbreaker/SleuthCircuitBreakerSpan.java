@@ -14,40 +14,34 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.annotation;
+package org.springframework.cloud.sleuth.instrument.circuitbreaker;
 
-import org.springframework.cloud.sleuth.docs.EventValue;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-enum SleuthAnnotationEvents implements EventValue {
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
+import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 
+enum SleuthCircuitBreakerSpan implements DocumentedSpan {
 	/**
-	 * Annotated before executing a method annotated with @ContinueSpan or @NewSpan.
+	 * Span created when we wrap a {@link Supplier} passed to the
+	 * {@link CircuitBreaker}.
 	 */
-	BEFORE {
+	SUPPLIER_SPAN {
 		@Override
-		public String getValue() {
-			return "%s.before";
+		public String getName() {
+			return "%s";
 		}
 	},
 
 	/**
-	 * Annotated after executing a method annotated with @ContinueSpan or @NewSpan.
+	 * Span created when we wrap a {@link Function} passed to the
+	 * {@link CircuitBreaker} as fallback.
 	 */
-	AFTER {
+	FUNCTION_SPAN {
 		@Override
-		public String getValue() {
-			return "%s.after";
-		}
-	},
-
-	/**
-	 * Annotated after throwing an exception from a method annotated with @ContinueSpan or @NewSpan.
-	 */
-	AFTER_FAILURE {
-		@Override
-		public String getValue() {
-			return "%.afterFailure";
+		public String getName() {
+			return "%s";
 		}
 	}
-
 }

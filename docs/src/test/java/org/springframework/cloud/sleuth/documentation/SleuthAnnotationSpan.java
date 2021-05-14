@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.annotation;
+package org.springframework.cloud.sleuth.documentation;
 
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.EventValue;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
 enum SleuthAnnotationSpan implements DocumentedSpan {
+
 	/**
 	 * Span that wraps a @NewSpan or @ContinueSpan annotations.
 	 */
@@ -95,7 +96,8 @@ enum SleuthAnnotationSpan implements DocumentedSpan {
 		},
 
 		/**
-		 * Annotated after throwing an exception from a method annotated with @ContinueSpan or @NewSpan.
+		 * Annotated after throwing an exception from a method annotated
+		 * with @ContinueSpan or @NewSpan.
 		 */
 		AFTER_FAILURE {
 			@Override
@@ -105,4 +107,5 @@ enum SleuthAnnotationSpan implements DocumentedSpan {
 		}
 
 	}
+
 }

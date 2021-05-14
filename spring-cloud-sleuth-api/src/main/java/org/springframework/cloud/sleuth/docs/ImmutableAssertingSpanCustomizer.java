@@ -18,7 +18,6 @@ package org.springframework.cloud.sleuth.docs;
 
 import java.util.Objects;
 
-import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.SpanCustomizer;
 
 import static java.util.Objects.requireNonNull;
@@ -26,6 +25,7 @@ import static java.util.Objects.requireNonNull;
 class ImmutableAssertingSpanCustomizer implements AssertingSpanCustomizer {
 
 	private final DocumentedSpan documentedSpan;
+
 	private final SpanCustomizer delegate;
 
 	ImmutableAssertingSpanCustomizer(DocumentedSpan documentedSpan, SpanCustomizer delegate) {
@@ -61,4 +61,5 @@ class ImmutableAssertingSpanCustomizer implements AssertingSpanCustomizer {
 	public SpanCustomizer getDelegate() {
 		return this.delegate;
 	}
+
 }

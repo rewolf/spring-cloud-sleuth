@@ -31,7 +31,6 @@ import reactor.util.context.Context;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.sleuth.CurrentTraceContext;
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.docs.Tag;
 import org.springframework.cloud.sleuth.TraceContext;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.http.HttpServerHandler;
@@ -298,7 +297,7 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 			private void addClassMethodTag(Object handler, Span span) {
 				if (handler instanceof HandlerMethod) {
 					String methodName = ((HandlerMethod) handler).getMethod().getName();
-					Tag.of(SleuthWebTags.METHOD, methodName).tag(span);
+					SleuthWebSpan.WEB_FILTER_SPAN.wrap(span).tag(SleuthWebSpan.Tags.METHOD, methodName);
 					if (log.isDebugEnabled()) {
 						log.debug("Adding a method tag with value [" + methodName + "] to a span " + span);
 					}
@@ -319,13 +318,13 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 				if (log.isDebugEnabled()) {
 					log.debug("Adding a class tag with value [" + className + "] to a span " + span);
 				}
-				Tag.of(SleuthWebTags.CLASS, className).tag(span);
+				SleuthWebSpan.WEB_FILTER_SPAN.wrap(span).tag(SleuthWebSpan.Tags.CLASS, className);
 			}
 
 			private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange, ServerHttpResponse response,
 					Span span) {
 				if (spanWithoutParent(exchange) && response.getStatusCode() != null && span != null) {
-					Tag.of(SleuthWebTags.CLASS, String.valueOf(response.getStatusCode().value())).tag(span);
+					SleuthWebSpan.WEB_FILTER_SPAN.wrap(span).tag(SleuthWebSpan.Tags.CLASS, String.valueOf(response.getStatusCode().value()));
 				}
 			}
 

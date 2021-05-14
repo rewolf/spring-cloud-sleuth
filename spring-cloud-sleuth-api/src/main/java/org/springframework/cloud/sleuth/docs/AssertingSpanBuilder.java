@@ -20,10 +20,10 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 
 /**
- * In order to describe your spans via e.g. enums instead of Strings
- * you can use this interface that returns all the characteristics of a span.
- * In Spring Cloud Sleuth we analyze the sources and reuse this
- * information to build a table of known spans, their names, tags and events.
+ * In order to describe your spans via e.g. enums instead of Strings you can use this
+ * interface that returns all the characteristics of a span. In Spring Cloud Sleuth we
+ * analyze the sources and reuse this information to build a table of known spans, their
+ * names, tags and events.
  *
  * @author Marcin Grzejszczak
  * @since 3.0.3
@@ -111,10 +111,16 @@ public interface AssertingSpanBuilder extends Span.Builder {
 			public Span getDelegate() {
 				return span;
 			}
+
+			@Override
+			public boolean isStarted() {
+				return true;
+			}
 		};
 	}
 
 	static AssertingSpanBuilder of(DocumentedSpan documentedSpan, Span.Builder builder) {
 		return new ImmutableAssertingSpanBuilder(documentedSpan, builder);
 	}
+
 }

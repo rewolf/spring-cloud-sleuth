@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.annotation;
+package org.springframework.cloud.sleuth.instrument.web;
 
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
-import org.springframework.cloud.sleuth.docs.EventValue;
 import org.springframework.cloud.sleuth.docs.TagKey;
+import org.springframework.web.server.WebFilter;
 
-enum SleuthAnnotationSpan implements DocumentedSpan {
+enum SleuthWebSpan implements DocumentedSpan {
+
 	/**
-	 * Span that wraps a @NewSpan or @ContinueSpan annotations.
+	 * Span around a {@link WebFilter}. Will continue
+	 * the current span or create a new one and tag it
 	 */
-	NEW_OR_CONTINUE_ANNOTATION_SPAN {
+	WEB_FILTER_SPAN {
 		@Override
 		public String getName() {
 			return "%s";
@@ -35,15 +37,10 @@ enum SleuthAnnotationSpan implements DocumentedSpan {
 			return Tags.values();
 		}
 
-		@Override
-		public EventValue[] getEvents() {
-			return Events.values();
-		}
-
 	};
 
 	/**
-	 * Tags related to Sleuth annotations.
+	 * Tags related to web.
 	 *
 	 * @author Marcin Grzejszczak
 	 * @since 3.0.3
@@ -51,56 +48,32 @@ enum SleuthAnnotationSpan implements DocumentedSpan {
 	enum Tags implements TagKey {
 
 		/**
-		 * Class name where a method got annotated with a Sleuth annotation.
+		 * Name of the class that is processing the request.
 		 */
 		CLASS {
 			@Override
 			public String getKey() {
-				return "class";
+				return "mvc.controller.class";
 			}
 		},
 
 		/**
-		 * Method name that got annotated with Sleuth annotation.
+		 * Name of the method that is processing the request.
 		 */
 		METHOD {
 			@Override
 			public String getKey() {
-				return "method";
-			}
-		}
-
-	}
-
-	enum Events implements EventValue {
-
-		/**
-		 * Annotated before executing a method annotated with @ContinueSpan or @NewSpan.
-		 */
-		BEFORE {
-			@Override
-			public String getValue() {
-				return "%s.before";
+				return "mvc.controller.method";
 			}
 		},
 
 		/**
-		 * Annotated after executing a method annotated with @ContinueSpan or @NewSpan.
+		 * Response status code.
 		 */
-		AFTER {
+		RESPONSE_STATUS_CODE {
 			@Override
-			public String getValue() {
-				return "%s.after";
-			}
-		},
-
-		/**
-		 * Annotated after throwing an exception from a method annotated with @ContinueSpan or @NewSpan.
-		 */
-		AFTER_FAILURE {
-			@Override
-			public String getValue() {
-				return "%.afterFailure";
+			public String getKey() {
+				return "http.status_code";
 			}
 		}
 

@@ -25,7 +25,10 @@ import static java.util.Objects.requireNonNull;
 class ImmutableAssertingSpan implements AssertingSpan {
 
 	private final DocumentedSpan documentedSpan;
+
 	private final Span delegate;
+
+	boolean isStarted;
 
 	ImmutableAssertingSpan(DocumentedSpan documentedSpan, Span delegate) {
 		requireNonNull(documentedSpan);
@@ -47,6 +50,11 @@ class ImmutableAssertingSpan implements AssertingSpan {
 	}
 
 	@Override
+	public String toString() {
+		return this.delegate.toString();
+	}
+
+	@Override
 	public int hashCode() {
 		return Objects.hash(documentedSpan, delegate);
 	}
@@ -60,4 +68,16 @@ class ImmutableAssertingSpan implements AssertingSpan {
 	public Span getDelegate() {
 		return this.delegate;
 	}
+
+	@Override
+	public AssertingSpan start() {
+		this.isStarted = true;
+		return AssertingSpan.super.start();
+	}
+
+	@Override
+	public boolean isStarted() {
+		return this.isStarted;
+	}
+
 }

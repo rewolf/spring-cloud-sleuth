@@ -22,13 +22,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.util.ClassUtils;
-
 final class DocumentedSpanAssertions {
 
-	private static final boolean ASSERTIONS_ON_THE_CLASSPATH = ClassUtils.isPresent("org.assertj.core.api.Assertions", null);
-
-	private static final boolean SLEUTH_SPAN_ASSERTIONS_ON = Boolean.parseBoolean(System.getProperty("spring.cloud.sleuth.assertion.enabled", "false"));
+	static boolean SLEUTH_SPAN_ASSERTIONS_ON = Boolean.parseBoolean(System.getProperty(
+			"spring.cloud.sleuth.assertion.enabled", System.getenv("SPRING_CLOUD_SLEUTH_ASSERTION_ENABLED") != null
+					? System.getenv("SPRING_CLOUD_SLEUTH_ASSERTION_ENABLED") : "false"));
 
 	private static final Map<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();
 
@@ -37,45 +35,56 @@ final class DocumentedSpanAssertions {
 	}
 
 	static void assertThatKeyIsValid(String key, TagKey[] allowedKeys) {
-		if (ASSERTIONS_ON_THE_CLASSPATH && SLEUTH_SPAN_ASSERTIONS_ON) {
-			boolean validTagKey = Arrays.stream(allowedKeys).anyMatch(tagKey -> patternOrValueMatches(key, tagKey.getKey()));
+		if (SLEUTH_SPAN_ASSERTIONS_ON) {
+			boolean validTagKey = Arrays.stream(allowedKeys)
+					.anyMatch(tagKey -> patternOrValueMatches(key, tagKey.getKey()));
 			if (!validTagKey) {
-				throw new AssertionError("The key [" + key + "] is invalid. You can use only one matching " + Arrays.stream(allowedKeys).map(TagKey::getKey)
-						.collect(Collectors.toList()));
+				throw new AssertionError("The key [" + key + "] is invalid. You can use only one matching "
+						+ Arrays.stream(allowedKeys).map(TagKey::getKey).collect(Collectors.toList()));
 			}
 		}
 	}
 
 	static void assertThatKeyIsValid(TagKey key, TagKey[] allowedKeys) {
-		if (ASSERTIONS_ON_THE_CLASSPATH) {
+		if (SLEUTH_SPAN_ASSERTIONS_ON) {
 			if (Arrays.stream(allowedKeys).noneMatch(tagKey -> tagKey == key)) {
-				throw new AssertionError("The key [" + key + "] is invalid. You can use only one matching " + Arrays.stream(allowedKeys).map(TagKey::getKey)
-						.collect(Collectors.toList()));
+				throw new AssertionError("The key [" + key + "] is invalid. You can use only one matching "
+						+ Arrays.stream(allowedKeys).map(TagKey::getKey).collect(Collectors.toList()));
 			}
 		}
 	}
 
 	static void assertThatNameIsValid(String name, String allowedName) {
-		if (ASSERTIONS_ON_THE_CLASSPATH && !patternOrValueMatches(name, allowedName)) {
-			throw new AssertionError("The name [" + name + "] is invalid. You can use only one matching [" + allowedName + "]");
+		if (SLEUTH_SPAN_ASSERTIONS_ON && !patternOrValueMatches(name, allowedName)) {
+			throw new AssertionError(
+					"The name [" + name + "] is invalid. You can use only one matching [" + allowedName + "]");
 		}
 	}
 
 	static void assertThatEventIsValid(String eventValue, EventValue[] allowed) {
-		if (ASSERTIONS_ON_THE_CLASSPATH) {
-			boolean valid = Arrays.stream(allowed).anyMatch(value -> patternOrValueMatches(eventValue, value.getValue()));
+		if (SLEUTH_SPAN_ASSERTIONS_ON) {
+			boolean valid = Arrays.stream(allowed)
+					.anyMatch(value -> patternOrValueMatches(eventValue, value.getValue()));
 			if (!valid) {
-				throw new AssertionError("The event [" + eventValue + "] is invalid. You can use only one matching " + Arrays.toString(allowed));
+				throw new AssertionError("The event [" + eventValue + "] is invalid. You can use only one matching "
+						+ Arrays.toString(allowed));
 			}
 		}
 	}
 
 	static void assertThatEventIsValid(EventValue eventValue, EventValue[] allowed) {
-		if (ASSERTIONS_ON_THE_CLASSPATH) {
+		if (SLEUTH_SPAN_ASSERTIONS_ON) {
 			boolean valid = Arrays.stream(allowed).noneMatch(value -> value == eventValue);
 			if (!valid) {
-				throw new AssertionError("The event [" + eventValue + "] is invalid. You can use only one matching " + Arrays.toString(allowed));
+				throw new AssertionError("The event [" + eventValue + "] is invalid. You can use only one matching "
+						+ Arrays.toString(allowed));
 			}
+		}
+	}
+
+	static void assertThatSpanStartedBeforeEnd(AssertingSpan span) {
+		if (SLEUTH_SPAN_ASSERTIONS_ON && !span.isStarted()) {
+			throw new AssertionError("The span was not started, however you're trying to end it");
 		}
 	}
 
@@ -87,4 +96,5 @@ final class DocumentedSpanAssertions {
 		}
 		return allowedValue.equals(pickedValue);
 	}
+
 }

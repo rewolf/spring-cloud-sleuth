@@ -16,24 +16,45 @@
 
 package org.springframework.cloud.sleuth.instrument.rxjava;
 
+import rx.functions.Action;
+
+import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
-/**
- * Tags related to RX Java.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.3
- */
-public enum SleuthRxJavaTags implements TagKey {
+enum SleuthRxJavaSpan implements DocumentedSpan {
+	/**
+	 * Span that wraps a Rx Java {@link Action}.
+	 */
+	TRACE_ACTION_SPAN {
+		@Override
+		public String getName() {
+			return "rxjava";
+		}
+
+		@Override
+		public TagKey[] getTagKeys() {
+			return Tags.values();
+		}
+
+	};
 
 	/**
-	 * Name of the thread.
+	 * Tags related to RX Java.
+	 *
+	 * @author Marcin Grzejszczak
+	 * @since 3.0.3
 	 */
-	THREAD {
-		@Override
-		public String getKey() {
-			return "thread";
-		}
-	}
+	enum Tags implements TagKey {
 
+		/**
+		 * Name of the thread.
+		 */
+		THREAD {
+			@Override
+			public String getKey() {
+				return "thread";
+			}
+		}
+
+	}
 }

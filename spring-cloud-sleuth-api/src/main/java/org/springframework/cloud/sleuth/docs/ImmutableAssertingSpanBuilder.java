@@ -19,13 +19,13 @@ package org.springframework.cloud.sleuth.docs;
 import java.util.Objects;
 
 import org.springframework.cloud.sleuth.Span;
-import org.springframework.cloud.sleuth.SpanCustomizer;
 
 import static java.util.Objects.requireNonNull;
 
 class ImmutableAssertingSpanBuilder implements AssertingSpanBuilder {
 
 	private final DocumentedSpan documentedSpan;
+
 	private final Span.Builder delegate;
 
 	ImmutableAssertingSpanBuilder(DocumentedSpan documentedSpan, Span.Builder delegate) {
@@ -48,6 +48,11 @@ class ImmutableAssertingSpanBuilder implements AssertingSpanBuilder {
 	}
 
 	@Override
+	public String toString() {
+		return this.delegate.toString();
+	}
+
+	@Override
 	public int hashCode() {
 		return Objects.hash(documentedSpan, delegate);
 	}
@@ -61,4 +66,5 @@ class ImmutableAssertingSpanBuilder implements AssertingSpanBuilder {
 	public Span.Builder getDelegate() {
 		return this.delegate;
 	}
+
 }

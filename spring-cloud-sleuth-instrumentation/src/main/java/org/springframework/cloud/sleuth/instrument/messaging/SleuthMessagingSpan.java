@@ -14,26 +14,40 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.sleuth.instrument.quartz;
+package org.springframework.cloud.sleuth.instrument.messaging;
 
+import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
-/**
- * Tags related to Quartz.
- *
- * @author Marcin Grzejszczak
- * @since 3.0.3
- */
-public enum SleuthQuartzTags implements TagKey {
+enum SleuthMessagingSpan implements DocumentedSpan {
 
 	/**
-	 * Name of the trigger.
+	 * Span created when message is sent or received.
 	 */
-	TRIGGER {
+	MESSAGING_SPAN {
 		@Override
-		public String getKey() {
-			return "quartz.trigger";
+		public String getName() {
+			return "%s";
 		}
-	}
 
+		@Override
+		public TagKey[] getTagKeys() {
+			return Tags.values();
+		}
+	};
+
+
+	enum Tags implements TagKey {
+
+		/**
+		 * Name of the Spring Integration channel.
+		 */
+		CHANNEL {
+			@Override
+			public String getKey() {
+				return "channel";
+			}
+		}
+
+	}
 }

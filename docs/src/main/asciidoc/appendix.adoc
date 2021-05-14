@@ -1,12 +1,12 @@
 :numbered!:
 
 [[appendix]]
-[[sleuth-tags]]
-== Sleuth tags
+[[sleuth-spans]]
+== Spring Cloud Sleuth Spans
 
-Below you can find a list of all the tags that are set by Sleuth
+Below you can find a list of all the spans that are created by Spring Cloud Sleuth.
 
-include::_tags.adoc[]
+include::_spans.adoc[]
 
 [[common-application-properties]]
 == Common application properties
