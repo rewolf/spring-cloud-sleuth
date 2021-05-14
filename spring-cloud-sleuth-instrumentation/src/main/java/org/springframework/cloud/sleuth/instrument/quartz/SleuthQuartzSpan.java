@@ -20,6 +20,7 @@ import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
 enum SleuthQuartzSpan implements DocumentedSpan {
+
 	/**
 	 * Span created when trigger is fired and then completed.
 	 */
@@ -48,4 +49,5 @@ enum SleuthQuartzSpan implements DocumentedSpan {
 		}
 
 	}
+
 }

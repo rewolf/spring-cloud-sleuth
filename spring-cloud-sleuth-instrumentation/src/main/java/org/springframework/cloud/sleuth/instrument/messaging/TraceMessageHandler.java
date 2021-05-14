@@ -187,13 +187,15 @@ class TraceMessageHandler {
 
 	private void addTags(Span.Builder result, String destinationName) {
 		if (StringUtils.hasText(destinationName)) {
-			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL, SpanNameUtil.shorten(destinationName));
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL,
+					SpanNameUtil.shorten(destinationName));
 		}
 	}
 
 	private void addTags(Span result, String destinationName) {
 		if (StringUtils.hasText(destinationName)) {
-			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL, SpanNameUtil.shorten(destinationName));
+			SleuthMessagingSpan.MESSAGING_SPAN.wrap(result).tag(SleuthMessagingSpan.Tags.CHANNEL,
+					SpanNameUtil.shorten(destinationName));
 		}
 	}
 

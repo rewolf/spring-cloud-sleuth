@@ -17,10 +17,10 @@
 package org.springframework.cloud.sleuth.docs;
 
 /**
- * Event value representing a notable event happening in time.
+ * Event value representing a notable event in time.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.3
+ * @since 3.1.0
  */
 public interface EventValue {
 

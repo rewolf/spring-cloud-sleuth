@@ -36,7 +36,6 @@ enum SleuthMessagingSpan implements DocumentedSpan {
 		}
 	};
 
-
 	enum Tags implements TagKey {
 
 		/**
@@ -50,4 +49,5 @@ enum SleuthMessagingSpan implements DocumentedSpan {
 		}
 
 	}
+
 }

@@ -59,6 +59,10 @@ public class DocsFromSources {
 			Path output = new File(this.outputDir, "_spans.adoc").toPath();
 			StringBuilder stringBuilder = new StringBuilder();
 			System.out.println("Found [" + spanEntries.size() + "] spans");
+			System.out.println("Found ["
+					+ spanEntries.stream().map(e -> e.tagKeys.size()).reduce(Integer::sum).orElse(0) + "] tags");
+			System.out.println("Found [" + spanEntries.stream().map(e -> e.events.size()).reduce(Integer::sum).orElse(0)
+					+ "] events");
 			Collections.sort(spanEntries);
 			spanEntries.forEach(spanEntry -> stringBuilder.append(spanEntry.toString()).append("\n\n"));
 			Files.write(output, stringBuilder.toString().getBytes());

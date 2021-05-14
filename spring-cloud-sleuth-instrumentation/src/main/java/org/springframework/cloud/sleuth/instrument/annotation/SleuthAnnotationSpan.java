@@ -21,6 +21,7 @@ import org.springframework.cloud.sleuth.docs.EventValue;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
 enum SleuthAnnotationSpan implements DocumentedSpan {
+
 	/**
 	 * Span that wraps a @NewSpan or @ContinueSpan annotations.
 	 */
@@ -95,14 +96,16 @@ enum SleuthAnnotationSpan implements DocumentedSpan {
 		},
 
 		/**
-		 * Annotated after throwing an exception from a method annotated with @ContinueSpan or @NewSpan.
+		 * Annotated after throwing an exception from a method annotated
+		 * with @ContinueSpan or @NewSpan.
 		 */
 		AFTER_FAILURE {
 			@Override
 			public String getValue() {
-				return "%.afterFailure";
+				return "%s.afterFailure";
 			}
 		}
 
 	}
+
 }

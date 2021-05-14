@@ -324,7 +324,8 @@ public class TraceWebFilter implements WebFilter, Ordered, ApplicationContextAwa
 			private void addResponseTagsForSpanWithoutParent(ServerWebExchange exchange, ServerHttpResponse response,
 					Span span) {
 				if (spanWithoutParent(exchange) && response.getStatusCode() != null && span != null) {
-					SleuthWebSpan.WEB_FILTER_SPAN.wrap(span).tag(SleuthWebSpan.Tags.CLASS, String.valueOf(response.getStatusCode().value()));
+					SleuthWebSpan.WEB_FILTER_SPAN.wrap(span).tag(SleuthWebSpan.Tags.CLASS,
+							String.valueOf(response.getStatusCode().value()));
 				}
 			}
 

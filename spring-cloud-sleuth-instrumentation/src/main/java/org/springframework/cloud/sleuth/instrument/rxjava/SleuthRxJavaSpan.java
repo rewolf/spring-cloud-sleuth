@@ -22,6 +22,7 @@ import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
 enum SleuthRxJavaSpan implements DocumentedSpan {
+
 	/**
 	 * Span that wraps a Rx Java {@link Action}.
 	 */
@@ -57,4 +58,5 @@ enum SleuthRxJavaSpan implements DocumentedSpan {
 		}
 
 	}
+
 }

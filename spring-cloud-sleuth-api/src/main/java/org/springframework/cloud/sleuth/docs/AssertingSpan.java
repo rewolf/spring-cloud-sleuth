@@ -20,13 +20,17 @@ import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.TraceContext;
 
 /**
- * In order to describe your spans via e.g. enums instead of Strings you can use this
- * interface that returns all the characteristics of a span. In Spring Cloud Sleuth we
- * analyze the sources and reuse this information to build a table of known spans, their
- * names, tags and events.
+ * {@link Span} that performs additional assertions such as
+ * allowed name, tag, event verification and upon reporting,
+ * whether the span had been started in the first place.
+ *
+ * You need to turn on assertions via system properties
+ * or environment variables to start breaking your
+ * tests or production code. Check {@link DocumentedSpanAssertions}
+ * for more information.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.3
+ * @since 3.1.0
  */
 public interface AssertingSpan extends Span {
 
@@ -127,8 +131,27 @@ public interface AssertingSpan extends Span {
 		return this;
 	}
 
+	/**
+	 * @param documentedSpan span configuration
+	 * @param span span to wrap in assertions
+	 * @return asserting span
+	 */
 	static AssertingSpan of(DocumentedSpan documentedSpan, Span span) {
 		return new ImmutableAssertingSpan(documentedSpan, span);
+	}
+
+	/**
+	 * Returns the underlying delegate. Used when casting is necessary.
+	 *
+	 * @param span span to check for wrapping
+	 * @param <T> type extending a span
+	 * @return unwrapped object
+	 */
+	static <T extends Span> T unwrap(Span span) {
+		if (span instanceof AssertingSpan) {
+			return (T) ((AssertingSpan) span).getDelegate();
+		}
+		return (T) span;
 	}
 
 }

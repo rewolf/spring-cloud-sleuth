@@ -26,12 +26,18 @@ import org.springframework.cloud.sleuth.TraceContext;
  * names, tags and events.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.3
+ * @since 3.1.0
  */
 public interface AssertingSpanBuilder extends Span.Builder {
 
+	/**
+	 * @return a {@link DocumentedSpan} with span configuration
+	 */
 	DocumentedSpan getDocumentedSpan();
 
+	/**
+	 * @return wrapped {@link Span.Builder}
+	 */
 	Span.Builder getDelegate();
 
 	@Override

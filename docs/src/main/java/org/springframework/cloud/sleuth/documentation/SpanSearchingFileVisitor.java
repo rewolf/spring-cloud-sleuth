@@ -81,6 +81,8 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 				SpanEntry entry = parseSpan(enumConstant, myEnum);
 				if (entry != null) {
 					spanEntries.add(entry);
+					System.out.println(
+							"Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
 				}
 			}
 			return FileVisitResult.CONTINUE;
@@ -126,10 +128,10 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 		JavaSource<?> nestedSource = nestedTypes.stream().filter(javaSource -> javaSource.getName().equals(enumName))
 				.findFirst()
 				.orElseThrow(() -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-		return parseKeyValue(nestedSource, requiredClass);
+		return parseKeyValue(myEnum, nestedSource, requiredClass);
 	}
 
-	private List<KeyValueEntry> parseKeyValue(JavaSource<?> source, Class requiredClass) {
+	private List<KeyValueEntry> parseKeyValue(JavaEnumImpl parentEnum, JavaSource<?> source, Class requiredClass) {
 		List<KeyValueEntry> keyValues = new ArrayList<>();
 		if (!(source instanceof JavaEnumImpl)) {
 			return keyValues;
@@ -138,7 +140,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 		if (!myEnum.getInterfaces().contains(requiredClass.getCanonicalName())) {
 			return keyValues;
 		}
-		System.out.println("Checking [" + myEnum.getName() + "]");
+		System.out.println("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");
 		if (myEnum.getEnumConstants().size() == 0) {
 			return keyValues;
 		}

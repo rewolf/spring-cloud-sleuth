@@ -18,13 +18,11 @@ package org.springframework.cloud.sleuth.instrument.web.mvc;
 
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
-import org.springframework.web.servlet.HandlerInterceptor;
 
 enum SleuthMvcSpan implements DocumentedSpan {
 
 	/**
-	 * Span around a {@link HandlerInterceptor}. Will continue
-	 * the current span and tag it
+	 * Span around a HandlerInterceptor. Will continue the current span and tag it
 	 */
 	HANDLER_INTERCEPTOR_SPAN {
 		@Override
@@ -47,7 +45,7 @@ enum SleuthMvcSpan implements DocumentedSpan {
 		CLASS {
 			@Override
 			public String getKey() {
-				return "class";
+				return "mvc.controller.class";
 			}
 		},
 
@@ -57,9 +55,10 @@ enum SleuthMvcSpan implements DocumentedSpan {
 		METHOD {
 			@Override
 			public String getKey() {
-				return "method";
+				return "mvc.controller.method";
 			}
 		}
 
 	}
+
 }

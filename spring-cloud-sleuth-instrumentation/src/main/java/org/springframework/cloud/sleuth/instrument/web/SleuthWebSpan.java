@@ -18,13 +18,12 @@ package org.springframework.cloud.sleuth.instrument.web;
 
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
-import org.springframework.web.server.WebFilter;
 
 enum SleuthWebSpan implements DocumentedSpan {
 
 	/**
-	 * Span around a {@link WebFilter}. Will continue
-	 * the current span or create a new one and tag it
+	 * Span around a WebFilter. Will continue the current span or create a new one
+	 * and tag it
 	 */
 	WEB_FILTER_SPAN {
 		@Override
@@ -78,4 +77,5 @@ enum SleuthWebSpan implements DocumentedSpan {
 		}
 
 	}
+
 }

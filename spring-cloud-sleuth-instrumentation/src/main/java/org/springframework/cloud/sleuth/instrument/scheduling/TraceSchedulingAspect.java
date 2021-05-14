@@ -63,8 +63,7 @@ public class TraceSchedulingAspect {
 			return pjp.proceed();
 		}
 		String spanName = SpanNameUtil.toLowerHyphen(pjp.getSignature().getName());
-		AssertingSpan span = SleuthSchedulingSpan.SCHEDULED_ANNOTATION_SPAN.wrap(startOrContinueSpan())
-				.name(spanName);
+		AssertingSpan span = SleuthSchedulingSpan.SCHEDULED_ANNOTATION_SPAN.wrap(startOrContinueSpan()).name(spanName);
 		try (Tracer.SpanInScope ws = this.tracer.withSpan(span.start())) {
 			span.tag(SleuthSchedulingSpan.Tags.CLASS, pjp.getTarget().getClass().getSimpleName())
 					.tag(SleuthSchedulingSpan.Tags.METHOD, pjp.getSignature().getName());

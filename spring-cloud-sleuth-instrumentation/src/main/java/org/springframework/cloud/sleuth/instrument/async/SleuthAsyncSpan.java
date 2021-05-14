@@ -20,9 +20,10 @@ import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 import org.springframework.cloud.sleuth.docs.TagKey;
 
 enum SleuthAsyncSpan implements DocumentedSpan {
+
 	/**
-	 * Span that wraps a @Async annotation. Either continues an existing
-	 * one or creates a new one if there was no present one.
+	 * Span that wraps a @Async annotation. Either continues an existing one or creates a
+	 * new one if there was no present one.
 	 */
 	ASYNC_ANNOTATION_SPAN {
 		@Override
@@ -60,4 +61,5 @@ enum SleuthAsyncSpan implements DocumentedSpan {
 		}
 
 	}
+
 }

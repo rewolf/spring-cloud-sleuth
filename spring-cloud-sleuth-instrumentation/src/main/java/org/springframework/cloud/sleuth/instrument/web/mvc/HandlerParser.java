@@ -49,7 +49,7 @@ public class HandlerParser {
 
 	/** Method name that processed the request. ex listOfBooks */
 	// TODO: Remove me
-	public static final String CONTROLLER_METHOD =SleuthMvcSpan.Tags.METHOD.getKey();
+	public static final String CONTROLLER_METHOD = SleuthMvcSpan.Tags.METHOD.getKey();
 
 	/**
 	 * Invoked prior to request invocation during

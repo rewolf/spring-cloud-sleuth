@@ -23,9 +23,9 @@ import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.sleuth.docs.DocumentedSpan;
 
 enum SleuthCircuitBreakerSpan implements DocumentedSpan {
+
 	/**
-	 * Span created when we wrap a {@link Supplier} passed to the
-	 * {@link CircuitBreaker}.
+	 * Span created when we wrap a {@link Supplier} passed to the {@link CircuitBreaker}.
 	 */
 	SUPPLIER_SPAN {
 		@Override
@@ -35,8 +35,8 @@ enum SleuthCircuitBreakerSpan implements DocumentedSpan {
 	},
 
 	/**
-	 * Span created when we wrap a {@link Function} passed to the
-	 * {@link CircuitBreaker} as fallback.
+	 * Span created when we wrap a {@link Function} passed to the {@link CircuitBreaker}
+	 * as fallback.
 	 */
 	FUNCTION_SPAN {
 		@Override
@@ -44,4 +44,5 @@ enum SleuthCircuitBreakerSpan implements DocumentedSpan {
 			return "%s";
 		}
 	}
+
 }

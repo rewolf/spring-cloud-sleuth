@@ -21,9 +21,10 @@ import org.springframework.cloud.sleuth.docs.TagKey;
 import org.springframework.scheduling.annotation.Scheduled;
 
 enum SleuthSchedulingSpan implements DocumentedSpan {
+
 	/**
-	 * Span that wraps a {@link Scheduled} annotated method.
-	 * Either creates a new span or continues an existing one.
+	 * Span that wraps a {@link Scheduled} annotated method. Either creates a new span or
+	 * continues an existing one.
 	 */
 	SCHEDULED_ANNOTATION_SPAN {
 		@Override
@@ -61,4 +62,5 @@ enum SleuthSchedulingSpan implements DocumentedSpan {
 		}
 
 	}
+
 }

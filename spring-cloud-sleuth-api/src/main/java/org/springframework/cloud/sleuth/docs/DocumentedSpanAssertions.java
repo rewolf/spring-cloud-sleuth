@@ -22,11 +22,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * In order to turn on the assertions you need to either turn on
+ * the {@code spring.cloud.sleuth.assertions.enabled} system property
+ * or {@code SPRING_CLOUD_SLEUTH_ASSERTIONS_ENABLED} environment variable.
+ */
 final class DocumentedSpanAssertions {
 
 	static boolean SLEUTH_SPAN_ASSERTIONS_ON = Boolean.parseBoolean(System.getProperty(
-			"spring.cloud.sleuth.assertion.enabled", System.getenv("SPRING_CLOUD_SLEUTH_ASSERTION_ENABLED") != null
-					? System.getenv("SPRING_CLOUD_SLEUTH_ASSERTION_ENABLED") : "false"));
+			"spring.cloud.sleuth.assertions.enabled", System.getenv("SPRING_CLOUD_SLEUTH_ASSERTIONS_ENABLED") != null
+					? System.getenv("SPRING_CLOUD_SLEUTH_ASSERTIONS_ENABLED") : "false"));
 
 	private static final Map<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();
 
@@ -67,7 +72,7 @@ final class DocumentedSpanAssertions {
 					.anyMatch(value -> patternOrValueMatches(eventValue, value.getValue()));
 			if (!valid) {
 				throw new AssertionError("The event [" + eventValue + "] is invalid. You can use only one matching "
-						+ Arrays.toString(allowed));
+						+ Arrays.stream(allowed).map(EventValue::getValue).collect(Collectors.toList()));
 			}
 		}
 	}

@@ -25,8 +25,18 @@ import org.springframework.cloud.sleuth.SpanCustomizer;
  * analyze the sources and reuse this information to build a table of known spans, their
  * names, tags and events.
  *
+ * We can generate documentation for all created spans but certain requirements need to be met
+ *
+ * - spans are grouped within an enum
+ * - the enum implements the {@link DocumentedSpan} interface
+ * - if the span contains {@link TagKey} or {@link EventValue} then those need to be
+ * declared as nested enums
+ *   - the {@link DocumentedSpan#getTagKeys()} and {@link DocumentedSpan#getEvents()}
+ *   need to call the nested enum's {@code values()} method to retrieve the array
+ *   of allowed keys / events
+ *
  * @author Marcin Grzejszczak
- * @since 3.0.3
+ * @since 3.1.0
  */
 public interface DocumentedSpan {
 

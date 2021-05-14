@@ -25,12 +25,18 @@ import org.springframework.cloud.sleuth.SpanCustomizer;
  * names, tags and events.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.3
+ * @since 3.1.0
  */
 public interface AssertingSpanCustomizer extends SpanCustomizer {
 
+	/**
+	 * @return a {@link DocumentedSpan} with span configuration
+	 */
 	DocumentedSpan getDocumentedSpan();
 
+	/**
+	 * @return wrapped {@link SpanCustomizer}
+	 */
 	SpanCustomizer getDelegate();
 
 	@Override
@@ -66,8 +72,27 @@ public interface AssertingSpanCustomizer extends SpanCustomizer {
 		return this;
 	}
 
+	/**
+	 * @param documentedSpan span configuration
+	 * @param span span to wrap in assertions
+	 * @return asserting span customizer
+	 */
 	static AssertingSpanCustomizer of(DocumentedSpan documentedSpan, SpanCustomizer span) {
 		return new ImmutableAssertingSpanCustomizer(documentedSpan, span);
+	}
+
+	/**
+	 * Returns the underlying delegate. Used when casting is necessary.
+	 *
+	 * @param span span to check for wrapping
+	 * @param <T> type extending a span
+	 * @return unwrapped object
+	 */
+	static <T extends SpanCustomizer> T unwrap(SpanCustomizer span) {
+		if (span instanceof AssertingSpanCustomizer) {
+			return (T) ((AssertingSpanCustomizer) span).getDelegate();
+		}
+		return (T) span;
 	}
 
 }

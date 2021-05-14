@@ -149,8 +149,7 @@ public class SleuthRxJavaSchedulersHook extends RxJavaSchedulersHook {
 			if (span == null) {
 				span = SleuthRxJavaSpan.TRACE_ACTION_SPAN.wrap(this.tracer.nextSpan())
 						.name(SleuthRxJavaSpan.TRACE_ACTION_SPAN.getName())
-						.tag(SleuthRxJavaSpan.Tags.THREAD, Thread.currentThread().getName())
-						.start();
+						.tag(SleuthRxJavaSpan.Tags.THREAD, Thread.currentThread().getName()).start();
 				created = true;
 			}
 			try (Tracer.SpanInScope ws = this.tracer.withSpan(span)) {

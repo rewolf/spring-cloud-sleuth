@@ -77,7 +77,7 @@ class SpanEntry implements Comparable<SpanEntry> {
 	//@formatter:off
 	public String toString() {
 		StringBuilder text = new StringBuilder()
-				.append("=== ").append(enumName)
+				.append("=== ").append(enumName.replace("_", " "))
 				.append("\n\n> ").append(description).append("\n\n")
 				.append("**Span name** `").append(name).append("`");
 		if (name.contains("%s")) {
