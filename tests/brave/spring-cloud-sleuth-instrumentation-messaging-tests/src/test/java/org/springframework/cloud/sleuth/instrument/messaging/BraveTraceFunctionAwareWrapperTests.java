@@ -16,85 +16,24 @@
 
 package org.springframework.cloud.sleuth.instrument.messaging;
 
-import brave.Span;
-import brave.Tracer;
-import brave.Tracing;
 import brave.handler.SpanHandler;
-import brave.propagation.B3SingleFormat;
-import brave.propagation.TraceContext;
 import brave.sampler.Sampler;
 import brave.test.TestSpanHandler;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.stream.binder.test.OutputDestination;
-import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.Message;
-import org.springframework.test.annotation.DirtiesContext;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Spencer Gibb
  */
-@SpringBootTest(classes = BraveTraceFunctionAwareWrapperTests.App.class,
-		properties = { "spring.cloud.stream.source=testSupplier", "spring.sleuth.integration.enabled=true" })
-@DirtiesContext
-public class BraveTraceFunctionAwareWrapperTests {
+public class BraveTraceFunctionAwareWrapperTests extends TraceFunctionAwareWrapperTests {
 
-	@Autowired
-	private OutputDestination channel;
-
-	@Autowired
-	private Tracing tracing;
-
-	@Autowired
-	private StreamBridge streamBridge;
-
-	@Autowired
-	private TestSpanHandler spans;
-
-	@AfterEach
-	public void close() {
-		this.spans.clear();
-	}
-
-	@Test
-	public void testSpanPropagationViaBridge() {
-		Span span = this.tracing.tracer().nextSpan().name("http:testSendMessage").start();
-		String expectedSpanId = span.context().spanIdString();
-
-		try (Tracer.SpanInScope ws = this.tracing.tracer().withSpanInScope(span)) {
-			this.streamBridge.send("testSupplier-out-0", "hi");
-		}
-		finally {
-			span.finish();
-		}
-
-		assertThatNewSpanIdWasSetOnMessage(expectedSpanId);
-	}
-
-	private void assertThatNewSpanIdWasSetOnMessage(String expectedSpanId) {
-		Message<?> message = this.channel.receive(0);
-		assertThat(message).as("message was null").isNotNull();
-
-		String b3 = message.getHeaders().get("b3", String.class);
-		// Trace and Span IDs are implicitly checked
-		TraceContext extracted = B3SingleFormat.parseB3SingleFormat(b3).context();
-
-		assertThat(extracted.spanIdString()).as("spanId was equal to parent's id").isNotEqualTo(expectedSpanId);
+	@Override
+	protected Class configuration() {
+		return App.class;
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@EnableAutoConfiguration
-	@ImportAutoConfiguration(TestChannelBinderConfiguration.class)
 	static class App {
 
 		@Bean
