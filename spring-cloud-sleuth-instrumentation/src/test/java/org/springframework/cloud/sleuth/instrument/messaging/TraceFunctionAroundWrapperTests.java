@@ -17,13 +17,76 @@
 package org.springframework.cloud.sleuth.instrument.messaging;
 
 import org.junit.jupiter.api.Test;
-
+import org.springframework.cloud.function.context.FunctionRegistration;
+import org.springframework.cloud.function.context.FunctionType;
+import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry;
+import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry.FunctionInvocationWrapper;
+import org.springframework.cloud.function.context.config.JsonMessageConverter;
+import org.springframework.cloud.function.json.GsonMapper;
+import org.springframework.cloud.function.json.JacksonMapper;
+import org.springframework.cloud.function.json.JsonMapper;
+import org.springframework.cloud.sleuth.Span;
+import org.springframework.cloud.sleuth.Tracer;
+import org.springframework.cloud.sleuth.tracer.SimpleTracer;
+import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.converter.ByteArrayMessageConverter;
+import org.springframework.messaging.converter.CompositeMessageConverter;
+import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.mock.env.MockEnvironment;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 class TraceFunctionAroundWrapperTests {
+
+	@Test
+	void foo() {
+		List<MessageConverter> messageConverters = new ArrayList<>();
+		JsonMapper jsonMapper = new JacksonMapper(new ObjectMapper());
+		messageConverters.add(new JsonMessageConverter(jsonMapper));
+//		messageConverters.add(new ByteArrayMessageConverter());
+//		messageConverters.add(new StringMessageConverter());
+		CompositeMessageConverter messageConverter = new CompositeMessageConverter(messageConverters);
+
+		SimpleTracer tracer = new SimpleTracer();
+
+		TraceFunctionAroundWrapper wrapper = new TraceFunctionAroundWrapper(null, tracer, null, null, null) {
+			@Override
+			MessageAndSpan getMessageAndSpans(Message resultMessage, String name, Span spanFromMessage) {
+				return new MessageAndSpan(resultMessage, spanFromMessage);
+			}
+		};
+
+		Greeter greeter = new Greeter();
+		FunctionRegistration<Greeter> registration = new FunctionRegistration<>(
+				greeter, "greeter").type(FunctionType.of(Greeter.class));
+		SimpleFunctionRegistry catalog = new SimpleFunctionRegistry(new DefaultConversionService(), messageConverter,
+				new JacksonMapper(new ObjectMapper()));
+		catalog.register(registration);
+		FunctionInvocationWrapper function = catalog.lookup("greeter");
+		Object result = wrapper.apply(null, function);
+		assertThat(tracer.getOnlySpan().name).isEqualTo("greeter");
+		System.out.println(tracer.getLastSpan());
+		System.out.println(result);
+	}
+
+	private static class Greeter implements Supplier<String> {
+
+		@Override
+		public String get() {
+			return "hello";
+		}
+
+	}
 
 	@Test
 	void should_clear_cache_on_refresh() {

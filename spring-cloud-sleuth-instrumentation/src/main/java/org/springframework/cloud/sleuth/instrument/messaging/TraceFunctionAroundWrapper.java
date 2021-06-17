@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
 import org.springframework.cloud.function.context.catalog.FunctionAroundWrapper;
 import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry;
+import org.springframework.cloud.sleuth.Span;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.propagation.Propagator;
 import org.springframework.context.ApplicationListener;
@@ -55,6 +56,8 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 
 	private final Propagator.Getter<MessageHeaderAccessor> extractor;
 
+	private final TraceMessageHandler traceMessageHandler;
+
 	final Map<String, String> functionToDestinationCache = new ConcurrentHashMap<>();
 
 	public TraceFunctionAroundWrapper(Environment environment, Tracer tracer, Propagator propagator,
@@ -64,46 +67,83 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		this.propagator = propagator;
 		this.injector = injector;
 		this.extractor = extractor;
+		this.traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(this.tracer,
+				this.propagator, this.injector, this.extractor);
 	}
 
+	@SuppressWarnings("finally")
 	@Override
 	protected Object doApply(Message<byte[]> message, SimpleFunctionRegistry.FunctionInvocationWrapper targetFunction) {
-		TraceMessageHandler traceMessageHandler = TraceMessageHandler.forNonSpringIntegration(this.tracer,
-				this.propagator, this.injector, this.extractor);
-		if (log.isDebugEnabled()) {
-			log.debug("Will retrieve the tracing headers from the message");
-		}
-		MessageAndSpans wrappedInputMessage = traceMessageHandler.wrapInputMessage(message,
-				inputDestination(targetFunction.getFunctionDefinition()));
-		if (log.isDebugEnabled()) {
-			log.debug("Wrapped input msg " + wrappedInputMessage);
-		}
-		Object result;
-		Throwable throwable = null;
-		try (Tracer.SpanInScope ws = tracer.withSpan(wrappedInputMessage.childSpan.start())) {
-			result = targetFunction.apply(wrappedInputMessage.msg);
-		}
-		catch (Exception e) {
-			throwable = e;
-			throw e;
-		}
-		finally {
-			traceMessageHandler.afterMessageHandled(wrappedInputMessage.childSpan, throwable);
-		}
-		if (result == null) {
-			if (log.isDebugEnabled()) {
-				log.debug("Returned message is null - we have a consumer");
+
+		if (message == null) {
+			Message resultMessage = null;
+			Throwable throwable = null;
+			Span spanFromMessage = traceMessageHandler.tracer.nextSpan().name(targetFunction.getFunctionDefinition());
+			try (Tracer.SpanInScope ws = tracer.withSpan(spanFromMessage.start())) {
+				resultMessage = this.toMessage(targetFunction.get());
 			}
-			return null;
+			catch (Exception e) {
+				throwable = e;
+				throw e;
+			}
+			finally {
+				if (throwable != null) {
+					traceMessageHandler.afterMessageHandled(spanFromMessage, throwable);
+					throw new IllegalStateException(throwable);
+				}
+				else {
+					MessageAndSpan wrappedOutputMessage = this.getMessageAndSpans(resultMessage,
+							targetFunction.getFunctionDefinition(), spanFromMessage);
+					if (log.isDebugEnabled()) {
+						log.debug("Wrapped output msg " + wrappedOutputMessage);
+					}
+					traceMessageHandler.afterMessageHandled(wrappedOutputMessage.span, null);
+					return wrappedOutputMessage.msg;
+				}
+			}
 		}
-		Message msgResult = toMessage(result);
-		MessageAndSpan wrappedOutputMessage = traceMessageHandler.wrapOutputMessage(msgResult,
-				wrappedInputMessage.parentSpan, outputDestination(targetFunction.getFunctionDefinition()));
-		if (log.isDebugEnabled()) {
-			log.debug("Wrapped output msg " + wrappedOutputMessage);
+		else {
+			if (log.isDebugEnabled()) {
+				log.debug("Will retrieve the tracing headers from the message");
+			}
+			MessageAndSpans wrappedInputMessage = traceMessageHandler.wrapInputMessage(message,
+					inputDestination(targetFunction.getFunctionDefinition()));
+			if (log.isDebugEnabled()) {
+				log.debug("Wrapped input msg " + wrappedInputMessage);
+			}
+			Object result;
+			Throwable throwable = null;
+			try (Tracer.SpanInScope ws = tracer.withSpan(wrappedInputMessage.childSpan.start())) {
+				result = targetFunction.apply(wrappedInputMessage.msg);
+			}
+			catch (Exception e) {
+				throwable = e;
+				throw e;
+			}
+			finally {
+				traceMessageHandler.afterMessageHandled(wrappedInputMessage.childSpan, throwable);
+			}
+			if (result == null) {
+				if (log.isDebugEnabled()) {
+					log.debug("Returned message is null - we have a consumer");
+				}
+				return null;
+			}
+			Message msgResult = toMessage(result);
+			MessageAndSpan wrappedOutputMessage = traceMessageHandler.wrapOutputMessage(msgResult,
+					wrappedInputMessage.parentSpan, outputDestination(targetFunction.getFunctionDefinition()));
+			if (log.isDebugEnabled()) {
+				log.debug("Wrapped output msg " + wrappedOutputMessage);
+			}
+			traceMessageHandler.afterMessageHandled(wrappedOutputMessage.span, null);
+			return wrappedOutputMessage.msg;
 		}
-		traceMessageHandler.afterMessageHandled(wrappedOutputMessage.span, null);
-		return wrappedOutputMessage.msg;
+
+	}
+
+	MessageAndSpan getMessageAndSpans(Message resultMessage, String name, Span spanFromMessage) {
+		return traceMessageHandler.wrapOutputMessage(resultMessage,
+				spanFromMessage, outputDestination(name));
 	}
 
 	private Message toMessage(Object result) {
@@ -138,5 +178,4 @@ public class TraceFunctionAroundWrapper extends FunctionAroundWrapper
 		}
 		this.functionToDestinationCache.clear();
 	}
-
 }
